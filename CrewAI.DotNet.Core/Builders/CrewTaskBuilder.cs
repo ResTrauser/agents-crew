@@ -1,0 +1,35 @@
+using CrewAI.DotNet.Core.Interfaces;
+using CrewAI.DotNet.Core.Models;
+
+namespace CrewAI.DotNet.Core.Builders
+{
+    public class CrewTaskBuilder
+    {
+        private string _description = string.Empty;
+        private string _expectedOutput = string.Empty;
+        private IAgent? _assignedAgent;
+
+        public CrewTaskBuilder WithDescription(string description)
+        {
+            _description = description;
+            return this;
+        }
+
+        public CrewTaskBuilder WithExpectedOutput(string expectedOutput)
+        {
+            _expectedOutput = expectedOutput;
+            return this;
+        }
+
+        public CrewTaskBuilder AssignTo(IAgent agent)
+        {
+            _assignedAgent = agent;
+            return this;
+        }
+
+        public ICrewTask Build()
+        {
+            return new CrewTask(_description, _expectedOutput, _assignedAgent);
+        }
+    }
+}
