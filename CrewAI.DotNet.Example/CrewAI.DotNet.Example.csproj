@@ -4,6 +4,12 @@
     <ProjectReference Include="..\CrewAI.DotNet.Core\CrewAI.DotNet.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="crew_config.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>

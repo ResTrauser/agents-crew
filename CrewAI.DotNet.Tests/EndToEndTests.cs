@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Builders;
+using CrewAI.DotNet.Core.Configuration;
 using CrewAI.DotNet.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
@@ -62,6 +64,33 @@ namespace CrewAI.DotNet.Tests
             Assert.Equal(2, memory.Count);
             Assert.Contains(memory, m => m.Contains("Research summary"));
             Assert.Contains(memory, m => m.Contains("Report content"));
+        }
+
+        [Fact]
+        public void YamlConfiguration_ShouldLoadCorrectly()
+        {
+            // Arrange
+            string yaml = @"
+agents:
+  - role: TestRole
+    goal: TestGoal
+    backstory: TestBackstory
+tasks:
+  - description: TestDescription
+    expected_output: TestOutput
+    assigned_agent: TestRole
+";
+            var loader = new YamlConfigurationLoader();
+
+            // Act
+            var config = loader.Load<CrewConfig>(yaml);
+
+            // Assert
+            Assert.NotNull(config);
+            Assert.Single(config.Agents);
+            Assert.Single(config.Tasks);
+            Assert.Equal("TestRole", config.Agents[0].Role);
+            Assert.Equal("TestDescription", config.Tasks[0].Description);
         }
 
         private class TestMockChatCompletionService : IChatCompletionService

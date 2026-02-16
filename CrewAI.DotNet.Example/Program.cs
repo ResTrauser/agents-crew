@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Builders;
+using CrewAI.DotNet.Core.Configuration;
 using CrewAI.DotNet.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
@@ -12,56 +15,66 @@ namespace CrewAI.DotNet.Example
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Initializing CrewAI .NET Example...");
+            Console.WriteLine("Initializing CrewAI .NET Example with YAML Config...");
 
             // Create a Kernel with Mock Chat Completion Service
             var kernelBuilder = Kernel.CreateBuilder();
             kernelBuilder.Services.AddSingleton<IChatCompletionService>(new MockChatCompletionService());
             var kernel = kernelBuilder.Build();
 
-            // Create Agents
-            var researcher = new AgentBuilder()
-                .WithRole("Researcher")
-                .WithGoal("Conduct research on CrewAI")
-                .WithBackstory("An expert researcher in AI frameworks.")
-                .WithKernel(kernel)
-                .Build();
+            // Load Configuration
+            var loader = new YamlConfigurationLoader();
+            var config = loader.LoadFromFile<CrewConfig>("crew_config.yaml");
 
-            var writer = new AgentBuilder()
-                .WithRole("Writer")
-                .WithGoal("Write an article about CrewAI")
-                .WithBackstory("A skilled tech writer.")
-                .WithKernel(kernel)
-                .Build();
+            // Build Agents from Config
+            var agents = new Dictionary<string, IAgent>();
+            foreach (var agentConfig in config.Agents)
+            {
+                var agent = new AgentBuilder()
+                    .FromConfig(agentConfig)
+                    .WithKernel(kernel)
+                    .Build();
 
-            // Create Tasks
-            var task1 = new CrewTaskBuilder()
-                .WithDescription("Research the core concepts of CrewAI.")
-                .WithExpectedOutput("A summary of CrewAI concepts.")
-                .AssignTo(researcher)
-                .Build();
+                // Assuming Role is unique for this example
+                agents[agentConfig.Role] = agent;
+                Console.WriteLine($"Agent created: {agent.Role}");
+            }
 
-            var task2 = new CrewTaskBuilder()
-                .WithDescription("Write a blog post based on the research.")
-                .WithExpectedOutput("A 500-word blog post.")
-                .AssignTo(writer)
-                .Build();
+            // Build Tasks from Config
+            var tasks = new List<ICrewTask>();
+            foreach (var taskConfig in config.Tasks)
+            {
+                var taskBuilder = new CrewTaskBuilder()
+                    .FromConfig(taskConfig);
+
+                if (!string.IsNullOrEmpty(taskConfig.AssignedAgent) && agents.ContainsKey(taskConfig.AssignedAgent))
+                {
+                    taskBuilder.AssignTo(agents[taskConfig.AssignedAgent]);
+                }
+
+                tasks.Add(taskBuilder.Build());
+                Console.WriteLine($"Task created: {taskConfig.Description}");
+            }
 
             // Create Crew
-            var crew = new CrewBuilder()
-                .AddAgent(researcher)
-                .AddAgent(writer)
-                .AddTask(task1)
-                .AddTask(task2)
-                .Build();
+            var crewBuilder = new CrewBuilder();
+            foreach (var agent in agents.Values)
+            {
+                crewBuilder.AddAgent(agent);
+            }
+            foreach (var task in tasks)
+            {
+                crewBuilder.AddTask(task);
+            }
+
+            var crew = crewBuilder.Build();
 
             // Kickoff
             Console.WriteLine("Starting Crew execution...");
             await crew.KickoffAsync();
             Console.WriteLine("Crew execution completed.");
 
-            // Display results (In a real app, we'd capture results or use callbacks, or check memory)
-            // For now, let's verify memory
+            // Display results
             var memory = crew.MemoryContext.ShortTerm.Get();
             Console.WriteLine("\nShort Term Memory Dump:");
             foreach (var item in memory)

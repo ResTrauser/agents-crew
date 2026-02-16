@@ -1,5 +1,6 @@
 using CrewAI.DotNet.Core.Interfaces;
 using CrewAI.DotNet.Core.Models;
+using CrewAI.DotNet.Core.Configuration;
 
 namespace CrewAI.DotNet.Core.Builders
 {
@@ -18,6 +19,13 @@ namespace CrewAI.DotNet.Core.Builders
         public CrewTaskBuilder WithExpectedOutput(string expectedOutput)
         {
             _expectedOutput = expectedOutput;
+            return this;
+        }
+
+        public CrewTaskBuilder FromConfig(TaskConfig config)
+        {
+            _description = config.Description;
+            _expectedOutput = config.ExpectedOutput;
             return this;
         }
 

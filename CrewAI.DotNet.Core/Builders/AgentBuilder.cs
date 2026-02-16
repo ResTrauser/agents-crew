@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CrewAI.DotNet.Core.Interfaces;
 using CrewAI.DotNet.Core.Models;
+using CrewAI.DotNet.Core.Configuration;
 using Microsoft.SemanticKernel;
 
 namespace CrewAI.DotNet.Core.Builders
@@ -28,6 +29,14 @@ namespace CrewAI.DotNet.Core.Builders
         public AgentBuilder WithBackstory(string backstory)
         {
             _backstory = backstory;
+            return this;
+        }
+
+        public AgentBuilder FromConfig(AgentConfig config)
+        {
+            _role = config.Role;
+            _goal = config.Goal;
+            _backstory = config.Backstory;
             return this;
         }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Interfaces;
@@ -21,8 +22,11 @@ namespace CrewAI.DotNet.Core.Memory
 
         public async Task<string> SearchAsync(string query)
         {
-            var result = await _memory.SearchAsync("LongTermMemory", query, limit: 1).FirstOrDefaultAsync();
-            return result?.Metadata.Text ?? string.Empty;
+            await foreach (var result in _memory.SearchAsync("LongTermMemory", query, limit: 1))
+            {
+                return result.Metadata.Text ?? string.Empty;
+            }
+            return string.Empty;
         }
     }
 }
