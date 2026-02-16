@@ -61,6 +61,12 @@ Context:
 Please execute the task.
 ";
 
+            // Use generic PromptExecutionSettings if possible, or explicit OpenAIPromptExecutionSettings
+            // Note: For custom services (like Mocks), auto-invocation might depend on the service handling it
+            // or the use of FunctionChoiceBehavior in newer SK versions.
+            // Falling back to manual loop if auto-invoke is not supported by the service is complex.
+            // Assuming OpenAIPromptExecutionSettings works with the underlying mechanism (filters).
+
             var executionSettings = new OpenAIPromptExecutionSettings()
             {
                 ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions

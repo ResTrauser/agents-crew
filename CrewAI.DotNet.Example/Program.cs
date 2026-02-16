@@ -1,13 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Builders;
 using CrewAI.DotNet.Core.Configuration;
 using CrewAI.DotNet.Core.Interfaces;
+using CrewAI.DotNet.Core.Process;
+using CrewAI.DotNet.Core.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using CrewAI.DotNet.Core.Plugins;
+using Microsoft.Extensions.Logging;
 
 namespace CrewAI.DotNet.Example
 {
@@ -15,59 +20,60 @@ namespace CrewAI.DotNet.Example
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Initializing CrewAI .NET Example with YAML Config...");
+            Console.WriteLine("Initializing CrewAI .NET Example with Dynamic Delegation...");
 
             // Create a Kernel with Mock Chat Completion Service
             var kernelBuilder = Kernel.CreateBuilder();
-            kernelBuilder.Services.AddSingleton<IChatCompletionService>(new MockChatCompletionService());
+            kernelBuilder.Services.AddLogging(c => c.AddConsole().SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace));
+            kernelBuilder.Services.AddSingleton<IChatCompletionService>(new DelegationMockChatCompletionService());
             var kernel = kernelBuilder.Build();
 
-            // Load Configuration
-            var loader = new YamlConfigurationLoader();
-            var config = loader.LoadFromFile<CrewConfig>("crew_config.yaml");
+            // Setup infrastructure manually to enable delegation
+            var agentManager = new AgentManager();
+#pragma warning disable SKEXP0001
+            var semanticMemory = new VolatileSemanticMemory();
+            var memoryContext = new MemoryContext(
+                new ShortTermMemory(),
+                new LongTermMemory(semanticMemory),
+                new EntityMemory()
+            );
+#pragma warning restore SKEXP0001
 
-            // Build Agents from Config
-            var agents = new Dictionary<string, IAgent>();
-            foreach (var agentConfig in config.Agents)
-            {
-                var agent = new AgentBuilder()
-                    .FromConfig(agentConfig)
-                    .WithKernel(kernel)
-                    .Build();
+            // Build Manager Agent with delegation capability
+            var manager = new AgentBuilder()
+                .WithRole("Manager")
+                .WithGoal("Oversee project")
+                .WithBackstory("Project Manager")
+                .WithKernel(kernel)
+                .WithDelegation(agentManager, memoryContext)
+                .WithAgentCreation(agentManager, kernel, memoryContext)
+                .Build();
 
-                // Assuming Role is unique for this example
-                agents[agentConfig.Role] = agent;
-                Console.WriteLine($"Agent created: {agent.Role}");
-            }
+            // Build Developer Agent (Manager could create this dynamically, but let's pre-register for simplicity)
+            var developer = new AgentBuilder()
+                .WithRole("Developer")
+                .WithGoal("Write code")
+                .WithBackstory("Senior Developer")
+                .WithKernel(kernel)
+                .Build();
 
-            // Build Tasks from Config
-            var tasks = new List<ICrewTask>();
-            foreach (var taskConfig in config.Tasks)
-            {
-                var taskBuilder = new CrewTaskBuilder()
-                    .FromConfig(taskConfig);
+            agentManager.RegisterAgent(manager);
+            agentManager.RegisterAgent(developer);
 
-                if (!string.IsNullOrEmpty(taskConfig.AssignedAgent) && agents.ContainsKey(taskConfig.AssignedAgent))
-                {
-                    taskBuilder.AssignTo(agents[taskConfig.AssignedAgent]);
-                }
-
-                tasks.Add(taskBuilder.Build());
-                Console.WriteLine($"Task created: {taskConfig.Description}");
-            }
+            // Create Task for Manager
+            var task = new CrewTaskBuilder()
+                .WithDescription("Coordinate the development of the app. Delegate coding tasks to Developer.")
+                .WithExpectedOutput("App development complete.")
+                .AssignTo(manager)
+                .Build();
 
             // Create Crew
-            var crewBuilder = new CrewBuilder();
-            foreach (var agent in agents.Values)
-            {
-                crewBuilder.AddAgent(agent);
-            }
-            foreach (var task in tasks)
-            {
-                crewBuilder.AddTask(task);
-            }
-
-            var crew = crewBuilder.Build();
+            var crew = new CrewBuilder()
+                .AddAgent(manager)
+                .AddAgent(developer)
+                .AddTask(task)
+                .WithMemory(memoryContext)
+                .Build();
 
             // Kickoff
             Console.WriteLine("Starting Crew execution...");
@@ -75,13 +81,74 @@ namespace CrewAI.DotNet.Example
             Console.WriteLine("Crew execution completed.");
 
             // Display results
-            var memory = crew.MemoryContext.ShortTerm.Get();
+            var memory = memoryContext.ShortTerm.Get();
             Console.WriteLine("\nShort Term Memory Dump:");
             foreach (var item in memory)
             {
                 Console.WriteLine("--------------------------------------------------");
                 Console.WriteLine(item);
             }
+        }
+    }
+
+    public class DelegationMockChatCompletionService : IChatCompletionService
+    {
+        public IReadOnlyDictionary<string, object?> Attributes => new Dictionary<string, object?>();
+
+        public Task<IReadOnlyList<ChatMessageContent>> GetChatMessageContentsAsync(ChatHistory chatHistory, PromptExecutionSettings? executionSettings = null, Kernel? kernel = null, CancellationToken cancellationToken = default)
+        {
+            var lastMessage = chatHistory.Last().Content;
+            string response = "I don't know what to do.";
+
+            // Log for debugging
+            Console.WriteLine($"Mock Service received message from {chatHistory.Last().Role}: {lastMessage}");
+
+            // Check if this is the Manager trying to delegate
+            if (lastMessage != null && lastMessage.Contains("Delegate coding tasks to Developer"))
+            {
+                Console.WriteLine("Mock: Triggering Delegation to Developer...");
+                var args = new KernelArguments
+                {
+                    { "agentRole", "Developer" },
+                    { "taskDescription", "Code the app" }
+                };
+
+                // FunctionCallContent(functionName, pluginName, id, arguments)
+                var toolCall = new FunctionCallContent("DelegateTask", "Delegation", "call_" + Guid.NewGuid().ToString("N"), args);
+
+                var message = new ChatMessageContent(AuthorRole.Assistant, content: null);
+                message.Items.Add(toolCall);
+
+                return Task.FromResult<IReadOnlyList<ChatMessageContent>>(new List<ChatMessageContent>
+                {
+                    message
+                });
+            }
+
+            // Developer execution
+            if (lastMessage != null && lastMessage.Contains("Code the app"))
+            {
+                Console.WriteLine("Mock: Developer coding...");
+                response = "App code written successfully.";
+            }
+
+            // Manager handling tool result
+            var lastMsg = chatHistory.Last();
+            if (lastMsg.Role == AuthorRole.Tool || (lastMsg.Content != null && lastMsg.Content.Contains("Task delegated to Developer")))
+            {
+                 Console.WriteLine("Mock: Delegation completed successfully.");
+                 response = "Development coordination complete. App is ready.";
+            }
+
+            return Task.FromResult<IReadOnlyList<ChatMessageContent>>(new List<ChatMessageContent>
+            {
+                new ChatMessageContent(AuthorRole.Assistant, response)
+            });
+        }
+
+        public IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(ChatHistory chatHistory, PromptExecutionSettings? executionSettings = null, Kernel? kernel = null, CancellationToken cancellationToken = default)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

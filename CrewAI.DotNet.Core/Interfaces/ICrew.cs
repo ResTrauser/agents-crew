@@ -9,6 +9,7 @@ namespace CrewAI.DotNet.Core.Interfaces
         IList<ICrewTask> Tasks { get; }
         IProcess Process { get; }
         IMemoryContext MemoryContext { get; }
+        IAgentManager AgentManager { get; }
 
         Task KickoffAsync();
     }
