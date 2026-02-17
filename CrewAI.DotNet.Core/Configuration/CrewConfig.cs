@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace CrewAI.DotNet.Core.Configuration
 {
     public class CrewConfig

@@ -1,3 +1,4 @@
+using System;
 using CrewAI.DotNet.Core.Interfaces;
 
 namespace CrewAI.DotNet.Core.Events
@@ -5,11 +6,7 @@ namespace CrewAI.DotNet.Core.Events
     public class CrewEventArgs : EventArgs
     {
         public string CrewName { get; }
-
-        public CrewEventArgs(string crewName)
-        {
-            CrewName = crewName;
-        }
+        public CrewEventArgs(string crewName) { CrewName = crewName; }
     }
 
     public class TaskEventArgs : EventArgs

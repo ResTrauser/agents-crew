@@ -2,14 +2,17 @@ using CrewAI.DotNet.Core.Interfaces;
 
 namespace CrewAI.DotNet.Core.Memory
 {
-    public class MemoryContext(
-        IShortTermMemory shortTerm,
-        ILongTermMemory longTerm,
-        IEntityMemory entity
-    ) : IMemoryContext
+    public class MemoryContext : IMemoryContext
     {
-        public IShortTermMemory ShortTerm { get; } = shortTerm;
-        public ILongTermMemory LongTerm { get; } = longTerm;
-        public IEntityMemory Entity { get; } = entity;
+        public IShortTermMemory ShortTerm { get; }
+        public ILongTermMemory LongTerm { get; }
+        public IEntityMemory Entity { get; }
+
+        public MemoryContext(IShortTermMemory shortTerm, ILongTermMemory longTerm, IEntityMemory entity)
+        {
+            ShortTerm = shortTerm;
+            LongTerm = longTerm;
+            Entity = entity;
+        }
     }
 }
