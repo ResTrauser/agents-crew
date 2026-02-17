@@ -1,15 +1,8 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Builders;
 using CrewAI.DotNet.Core.Configuration;
-using CrewAI.DotNet.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Xunit;
 
 namespace CrewAI.DotNet.Tests
 {
@@ -20,7 +13,9 @@ namespace CrewAI.DotNet.Tests
         {
             // Arrange
             var kernelBuilder = Kernel.CreateBuilder();
-            kernelBuilder.Services.AddSingleton<IChatCompletionService>(new TestMockChatCompletionService());
+            kernelBuilder.Services.AddSingleton<IChatCompletionService>(
+                new TestMockChatCompletionService()
+            );
             var kernel = kernelBuilder.Build();
 
             var researcher = new AgentBuilder()
@@ -70,7 +65,8 @@ namespace CrewAI.DotNet.Tests
         public void YamlConfiguration_ShouldLoadCorrectly()
         {
             // Arrange
-            string yaml = @"
+            string yaml =
+                @"
 agents:
   - role: TestRole
     goal: TestGoal
@@ -95,9 +91,15 @@ tasks:
 
         private class TestMockChatCompletionService : IChatCompletionService
         {
-            public IReadOnlyDictionary<string, object?> Attributes => new Dictionary<string, object?>();
+            public IReadOnlyDictionary<string, object?> Attributes =>
+                new Dictionary<string, object?>();
 
-            public Task<IReadOnlyList<ChatMessageContent>> GetChatMessageContentsAsync(ChatHistory chatHistory, PromptExecutionSettings? executionSettings = null, Kernel? kernel = null, CancellationToken cancellationToken = default)
+            public Task<IReadOnlyList<ChatMessageContent>> GetChatMessageContentsAsync(
+                ChatHistory chatHistory,
+                PromptExecutionSettings? executionSettings = null,
+                Kernel? kernel = null,
+                CancellationToken cancellationToken = default
+            )
             {
                 var lastMessage = chatHistory.Last().Content;
                 string response = "Mock response";
@@ -114,13 +116,20 @@ tasks:
                     }
                 }
 
-                return Task.FromResult<IReadOnlyList<ChatMessageContent>>(new List<ChatMessageContent>
-                {
-                    new ChatMessageContent(AuthorRole.Assistant, response)
-                });
+                return Task.FromResult<IReadOnlyList<ChatMessageContent>>(
+                    new List<ChatMessageContent>
+                    {
+                        new ChatMessageContent(AuthorRole.Assistant, response),
+                    }
+                );
             }
 
-            public IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(ChatHistory chatHistory, PromptExecutionSettings? executionSettings = null, Kernel? kernel = null, CancellationToken cancellationToken = default)
+            public IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(
+                ChatHistory chatHistory,
+                PromptExecutionSettings? executionSettings = null,
+                Kernel? kernel = null,
+                CancellationToken cancellationToken = default
+            )
             {
                 throw new System.NotImplementedException();
             }

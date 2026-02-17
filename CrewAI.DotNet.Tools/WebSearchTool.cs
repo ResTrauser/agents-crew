@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
 
 namespace CrewAI.DotNet.Tools
@@ -21,7 +20,8 @@ namespace CrewAI.DotNet.Tools
         [KernelFunction]
         [Description("Searches the web for a given query.")]
         public async Task<string> SearchAsync(
-            [Description("The query to search for.")] string query)
+            [Description("The query to search for.")] string query
+        )
         {
             return await _searchService.SearchAsync(query);
         }

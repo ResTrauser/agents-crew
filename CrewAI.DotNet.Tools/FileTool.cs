@@ -1,6 +1,4 @@
 using System.ComponentModel;
-using System.IO;
-using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
 
 namespace CrewAI.DotNet.Tools
@@ -10,7 +8,8 @@ namespace CrewAI.DotNet.Tools
         [KernelFunction]
         [Description("Reads the content of a file.")]
         public async Task<string> ReadFileAsync(
-            [Description("The path to the file to read.")] string filePath)
+            [Description("The path to the file to read.")] string filePath
+        )
         {
             if (!File.Exists(filePath))
             {
@@ -23,7 +22,8 @@ namespace CrewAI.DotNet.Tools
         [Description("Writes content to a file.")]
         public async Task WriteFileAsync(
             [Description("The path to the file to write.")] string filePath,
-            [Description("The content to write.")] string content)
+            [Description("The content to write.")] string content
+        )
         {
             await File.WriteAllTextAsync(filePath, content);
         }
