@@ -1,21 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Builders;
-using CrewAI.DotNet.Core.Configuration;
-using CrewAI.DotNet.Core.Interfaces;
-using CrewAI.DotNet.Core.Process;
+using CrewAI.DotNet.Core.Knowledge;
 using CrewAI.DotNet.Core.Memory;
+using CrewAI.DotNet.Core.Process;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using CrewAI.DotNet.Core.Plugins;
-using CrewAI.DotNet.Core.Knowledge;
-using CrewAI.DotNet.Tools;
-using System.IO;
 
 namespace CrewAI.DotNet.Example
 {
@@ -23,12 +13,18 @@ namespace CrewAI.DotNet.Example
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Initializing CrewAI .NET Example with Dynamic Delegation, Knowledge, and Tools...");
+            Console.WriteLine(
+                "Initializing CrewAI .NET Example with Dynamic Delegation, Knowledge, and Tools..."
+            );
 
             // Create a Kernel with Mock Chat Completion Service
             var kernelBuilder = Kernel.CreateBuilder();
-            kernelBuilder.Services.AddLogging(c => c.AddConsole().SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Warning));
-            kernelBuilder.Services.AddSingleton<IChatCompletionService>(new DelegationMockChatCompletionService());
+            kernelBuilder.Services.AddLogging(c =>
+                c.AddConsole().SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Warning)
+            );
+            kernelBuilder.Services.AddSingleton<IChatCompletionService>(
+                new DelegationMockChatCompletionService()
+            );
             var kernel = kernelBuilder.Build();
 
             // Setup infrastructure
@@ -43,7 +39,10 @@ namespace CrewAI.DotNet.Example
 #pragma warning restore SKEXP0001
 
             // Create a dummy knowledge file
-            await File.WriteAllTextAsync("knowledge.txt", "CrewAI is a framework for orchestrating AI agents.");
+            await File.WriteAllTextAsync(
+                "knowledge.txt",
+                "CrewAI is a framework for orchestrating AI agents."
+            );
 
             // Build Manager Agent
             var manager = new AgentBuilder()
@@ -74,7 +73,9 @@ namespace CrewAI.DotNet.Example
 
             // Create Task for Manager
             var task = new CrewTaskBuilder()
-                .WithDescription("Coordinate the development of the app. Delegate coding tasks to Developer.")
+                .WithDescription(
+                    "Coordinate the development of the app. Delegate coding tasks to Developer."
+                )
                 .WithExpectedOutput("App development complete.")
                 .AssignTo(manager)
                 .Build();
@@ -108,15 +109,20 @@ namespace CrewAI.DotNet.Example
 
     public class AppResult
     {
-        public string Status { get; set; }
-        public string Message { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
     }
 
     public class DelegationMockChatCompletionService : IChatCompletionService
     {
         public IReadOnlyDictionary<string, object?> Attributes => new Dictionary<string, object?>();
 
-        public Task<IReadOnlyList<ChatMessageContent>> GetChatMessageContentsAsync(ChatHistory chatHistory, PromptExecutionSettings? executionSettings = null, Kernel? kernel = null, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<ChatMessageContent>> GetChatMessageContentsAsync(
+            ChatHistory chatHistory,
+            PromptExecutionSettings? executionSettings = null,
+            Kernel? kernel = null,
+            CancellationToken cancellationToken = default
+        )
         {
             var lastMessage = chatHistory.Last().Content;
             string response = "I don't know what to do.";
@@ -131,18 +137,22 @@ namespace CrewAI.DotNet.Example
                 var args = new KernelArguments
                 {
                     { "agentRole", "Developer" },
-                    { "taskDescription", "Code the app" }
+                    { "taskDescription", "Code the app" },
                 };
 
-                var toolCall = new FunctionCallContent("DelegateTask", "Delegation", "call_" + Guid.NewGuid().ToString("N"), args);
+                var toolCall = new FunctionCallContent(
+                    "DelegateTask",
+                    "Delegation",
+                    "call_" + Guid.NewGuid().ToString("N"),
+                    args
+                );
 
                 var message = new ChatMessageContent(AuthorRole.Assistant, content: null);
                 message.Items.Add(toolCall);
 
-                return Task.FromResult<IReadOnlyList<ChatMessageContent>>(new List<ChatMessageContent>
-                {
-                    message
-                });
+                return Task.FromResult<IReadOnlyList<ChatMessageContent>>(
+                    new List<ChatMessageContent> { message }
+                );
             }
 
             // Developer execution
@@ -154,20 +164,33 @@ namespace CrewAI.DotNet.Example
 
             // Manager handling tool result
             var lastMsg = chatHistory.Last();
-            if (lastMsg.Role == AuthorRole.Tool || (lastMsg.Content != null && lastMsg.Content.Contains("Task delegated to Developer")))
+            if (
+                lastMsg.Role == AuthorRole.Tool
+                || (
+                    lastMsg.Content != null
+                    && lastMsg.Content.Contains("Task delegated to Developer")
+                )
+            )
             {
-                 // Console.WriteLine("Mock: Delegation completed successfully.");
-                 // Return structured JSON
-                 response = "{ \"Status\": \"Success\", \"Message\": \"App is ready.\" }";
+                // Console.WriteLine("Mock: Delegation completed successfully.");
+                // Return structured JSON
+                response = "{ \"Status\": \"Success\", \"Message\": \"App is ready.\" }";
             }
 
-            return Task.FromResult<IReadOnlyList<ChatMessageContent>>(new List<ChatMessageContent>
-            {
-                new ChatMessageContent(AuthorRole.Assistant, response)
-            });
+            return Task.FromResult<IReadOnlyList<ChatMessageContent>>(
+                new List<ChatMessageContent>
+                {
+                    new ChatMessageContent(AuthorRole.Assistant, response),
+                }
+            );
         }
 
-        public IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(ChatHistory chatHistory, PromptExecutionSettings? executionSettings = null, Kernel? kernel = null, CancellationToken cancellationToken = default)
+        public IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(
+            ChatHistory chatHistory,
+            PromptExecutionSettings? executionSettings = null,
+            Kernel? kernel = null,
+            CancellationToken cancellationToken = default
+        )
         {
             throw new System.NotImplementedException();
         }
