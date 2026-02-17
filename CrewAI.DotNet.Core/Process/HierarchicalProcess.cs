@@ -1,22 +1,16 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Interfaces;
-using CrewAI.DotNet.Core.Models;
-using Microsoft.SemanticKernel;
 
 namespace CrewAI.DotNet.Core.Process
 {
-    public class HierarchicalProcess : IProcess
+    public class HierarchicalProcess(IAgent managerAgent) : IProcess
     {
-        private readonly IAgent _managerAgent;
+        private readonly IAgent _managerAgent = managerAgent;
 
-        public HierarchicalProcess(IAgent managerAgent)
-        {
-            _managerAgent = managerAgent;
-        }
-
-        public async Task ExecuteAsync(IList<IAgent> agents, IList<ICrewTask> tasks, IMemoryContext? memoryContext = null)
+        public async Task ExecuteAsync(
+            IList<IAgent> agents,
+            IList<ICrewTask> tasks,
+            IMemoryContext? memoryContext = null
+        )
         {
             foreach (var task in tasks)
             {

@@ -1,30 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Interfaces;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace CrewAI.DotNet.Core.Models
 {
-    public class Agent : IAgent
+    public class Agent(string role, string goal, string backstory, Kernel? kernel = null) : IAgent
     {
-        public string Role { get; set; }
-        public string Goal { get; set; }
-        public string Backstory { get; set; }
+        public string Role { get; set; } = role;
+        public string Goal { get; set; } = goal;
+        public string Backstory { get; set; } = backstory;
         public IList<KernelPlugin> Tools { get; set; } = new List<KernelPlugin>();
-        public IList<IKnowledgeSource> KnowledgeSources { get; set; } = new List<IKnowledgeSource>();
+        public IList<IKnowledgeSource> KnowledgeSources { get; set; } =
+            new List<IKnowledgeSource>();
 
-        public Kernel? Kernel { get; set; }
-
-        public Agent(string role, string goal, string backstory, Kernel? kernel = null)
-        {
-            Role = role;
-            Goal = goal;
-            Backstory = backstory;
-            Kernel = kernel;
-        }
+        public Kernel? Kernel { get; set; } = kernel;
 
         public async Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null)
         {
@@ -54,7 +43,8 @@ namespace CrewAI.DotNet.Core.Models
 
             var context = await BuildContextAsync(task, memoryContext);
 
-            var prompt = $@"
+            var prompt =
+                $@"
 You are a {Role}.
 Goal: {Goal}
 Backstory: {Backstory}
@@ -77,10 +67,13 @@ Please execute the task.
 
             var executionSettings = new OpenAIPromptExecutionSettings()
             {
-                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
             };
 
-            var result = await scopedKernel.InvokePromptAsync(prompt, new KernelArguments(executionSettings));
+            var result = await scopedKernel.InvokePromptAsync(
+                prompt,
+                new KernelArguments(executionSettings)
+            );
 
             var output = result.GetValue<string>() ?? string.Empty;
 
@@ -111,11 +104,14 @@ Please execute the task.
 
         private string GetStructuredOutputInstruction(ICrewTask task)
         {
-            if (task.OutputType == null) return string.Empty;
+            if (task.OutputType == null)
+                return string.Empty;
 
             // Generate a JSON schema or simple description of the type
             // For MVP, we'll just ask for JSON matching the properties.
-            var properties = task.OutputType.GetProperties().Select(p => $"{p.Name} ({p.PropertyType.Name})");
+            var properties = task
+                .OutputType.GetProperties()
+                .Select(p => $"{p.Name} ({p.PropertyType.Name})");
             return $@"
 IMPORTANT: You MUST return the result as a valid JSON object matching this schema:
 {{
@@ -127,7 +123,8 @@ Do not include any markdown formatting (like ```json). Just the raw JSON string.
 
         private async Task<string> BuildContextAsync(ICrewTask task, IMemoryContext? memoryContext)
         {
-            if (memoryContext == null) return string.Empty;
+            if (memoryContext == null)
+                return string.Empty;
 
             var shortTerm = string.Join("\n", memoryContext.ShortTerm.Get());
             var longTerm = await memoryContext.LongTerm.SearchAsync(task.Description);
