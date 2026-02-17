@@ -9,10 +9,13 @@ using CrewAI.DotNet.Core.Interfaces;
 using CrewAI.DotNet.Core.Process;
 using CrewAI.DotNet.Core.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using CrewAI.DotNet.Core.Plugins;
-using Microsoft.Extensions.Logging;
+using CrewAI.DotNet.Core.Knowledge;
+using CrewAI.DotNet.Tools;
+using System.IO;
 
 namespace CrewAI.DotNet.Example
 {
@@ -20,15 +23,15 @@ namespace CrewAI.DotNet.Example
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Initializing CrewAI .NET Example with Dynamic Delegation...");
+            Console.WriteLine("Initializing CrewAI .NET Example with Dynamic Delegation, Knowledge, and Tools...");
 
             // Create a Kernel with Mock Chat Completion Service
             var kernelBuilder = Kernel.CreateBuilder();
-            kernelBuilder.Services.AddLogging(c => c.AddConsole().SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace));
+            kernelBuilder.Services.AddLogging(c => c.AddConsole().SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Warning));
             kernelBuilder.Services.AddSingleton<IChatCompletionService>(new DelegationMockChatCompletionService());
             var kernel = kernelBuilder.Build();
 
-            // Setup infrastructure manually to enable delegation
+            // Setup infrastructure
             var agentManager = new AgentManager();
 #pragma warning disable SKEXP0001
             var semanticMemory = new VolatileSemanticMemory();
@@ -39,7 +42,10 @@ namespace CrewAI.DotNet.Example
             );
 #pragma warning restore SKEXP0001
 
-            // Build Manager Agent with delegation capability
+            // Create a dummy knowledge file
+            await File.WriteAllTextAsync("knowledge.txt", "CrewAI is a framework for orchestrating AI agents.");
+
+            // Build Manager Agent
             var manager = new AgentBuilder()
                 .WithRole("Manager")
                 .WithGoal("Oversee project")
@@ -49,13 +55,19 @@ namespace CrewAI.DotNet.Example
                 .WithAgentCreation(agentManager, kernel, memoryContext)
                 .Build();
 
-            // Build Developer Agent (Manager could create this dynamically, but let's pre-register for simplicity)
+            // Add Knowledge Source
+            manager.KnowledgeSources.Add(new TextFileKnowledgeSource("knowledge.txt"));
+
+            // Build Developer Agent
             var developer = new AgentBuilder()
                 .WithRole("Developer")
                 .WithGoal("Write code")
                 .WithBackstory("Senior Developer")
                 .WithKernel(kernel)
                 .Build();
+
+            // Add File Tool
+            // developer.Tools.Add(KernelPluginFactory.CreateFromType<FileTool>("FileTool")); // Need to create instance or type
 
             agentManager.RegisterAgent(manager);
             agentManager.RegisterAgent(developer);
@@ -66,6 +78,9 @@ namespace CrewAI.DotNet.Example
                 .WithExpectedOutput("App development complete.")
                 .AssignTo(manager)
                 .Build();
+
+            // Define output type for structured output test
+            task.OutputType = typeof(AppResult);
 
             // Create Crew
             var crew = new CrewBuilder()
@@ -91,6 +106,12 @@ namespace CrewAI.DotNet.Example
         }
     }
 
+    public class AppResult
+    {
+        public string Status { get; set; }
+        public string Message { get; set; }
+    }
+
     public class DelegationMockChatCompletionService : IChatCompletionService
     {
         public IReadOnlyDictionary<string, object?> Attributes => new Dictionary<string, object?>();
@@ -101,19 +122,18 @@ namespace CrewAI.DotNet.Example
             string response = "I don't know what to do.";
 
             // Log for debugging
-            Console.WriteLine($"Mock Service received message from {chatHistory.Last().Role}: {lastMessage}");
+            // Console.WriteLine($"Mock Service received message from {chatHistory.Last().Role}: {lastMessage}");
 
             // Check if this is the Manager trying to delegate
             if (lastMessage != null && lastMessage.Contains("Delegate coding tasks to Developer"))
             {
-                Console.WriteLine("Mock: Triggering Delegation to Developer...");
+                // Console.WriteLine("Mock: Triggering Delegation to Developer...");
                 var args = new KernelArguments
                 {
                     { "agentRole", "Developer" },
                     { "taskDescription", "Code the app" }
                 };
 
-                // FunctionCallContent(functionName, pluginName, id, arguments)
                 var toolCall = new FunctionCallContent("DelegateTask", "Delegation", "call_" + Guid.NewGuid().ToString("N"), args);
 
                 var message = new ChatMessageContent(AuthorRole.Assistant, content: null);
@@ -128,7 +148,7 @@ namespace CrewAI.DotNet.Example
             // Developer execution
             if (lastMessage != null && lastMessage.Contains("Code the app"))
             {
-                Console.WriteLine("Mock: Developer coding...");
+                // Console.WriteLine("Mock: Developer coding...");
                 response = "App code written successfully.";
             }
 
@@ -136,8 +156,9 @@ namespace CrewAI.DotNet.Example
             var lastMsg = chatHistory.Last();
             if (lastMsg.Role == AuthorRole.Tool || (lastMsg.Content != null && lastMsg.Content.Contains("Task delegated to Developer")))
             {
-                 Console.WriteLine("Mock: Delegation completed successfully.");
-                 response = "Development coordination complete. App is ready.";
+                 // Console.WriteLine("Mock: Delegation completed successfully.");
+                 // Return structured JSON
+                 response = "{ \"Status\": \"Success\", \"Message\": \"App is ready.\" }";
             }
 
             return Task.FromResult<IReadOnlyList<ChatMessageContent>>(new List<ChatMessageContent>

@@ -5,5 +5,6 @@ namespace CrewAI.DotNet.Core.Interfaces
         string Description { get; }
         string ExpectedOutput { get; }
         IAgent? AssignedAgent { get; set; }
+        System.Type? OutputType { get; set; }
     }
 }

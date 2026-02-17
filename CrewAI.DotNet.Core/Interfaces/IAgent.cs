@@ -10,6 +10,7 @@ namespace CrewAI.DotNet.Core.Interfaces
         string Goal { get; }
         string Backstory { get; }
         IList<KernelPlugin> Tools { get; }
+        IList<IKnowledgeSource> KnowledgeSources { get; }
 
         Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null);
     }

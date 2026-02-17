@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrewAI.DotNet.Example", "Cr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrewAI.DotNet.Tests", "CrewAI.DotNet.Tests\CrewAI.DotNet.Tests.csproj", "{FA942675-ED65-446D-9923-D65BA590FCE7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrewAI.DotNet.Tools", "CrewAI.DotNet.Tools\CrewAI.DotNet.Tools.csproj", "{6C985939-B94F-44B9-B82F-ADEBEB27645D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{FA942675-ED65-446D-9923-D65BA590FCE7}.Release|x64.Build.0 = Release|Any CPU
 		{FA942675-ED65-446D-9923-D65BA590FCE7}.Release|x86.ActiveCfg = Release|Any CPU
 		{FA942675-ED65-446D-9923-D65BA590FCE7}.Release|x86.Build.0 = Release|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Debug|x64.Build.0 = Debug|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Debug|x86.Build.0 = Debug|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|x64.ActiveCfg = Release|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|x64.Build.0 = Release|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|x86.ActiveCfg = Release|Any CPU
+		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

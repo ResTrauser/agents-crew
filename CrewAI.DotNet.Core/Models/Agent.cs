@@ -14,6 +14,7 @@ namespace CrewAI.DotNet.Core.Models
         public string Goal { get; set; }
         public string Backstory { get; set; }
         public IList<KernelPlugin> Tools { get; set; } = new List<KernelPlugin>();
+        public IList<IKnowledgeSource> KnowledgeSources { get; set; } = new List<IKnowledgeSource>();
 
         public Kernel? Kernel { get; set; }
 
@@ -45,6 +46,12 @@ namespace CrewAI.DotNet.Core.Models
                 }
             }
 
+            if (memoryContext != null && !_knowledgeIngested)
+            {
+                await IngestKnowledgeAsync(memoryContext);
+                _knowledgeIngested = true;
+            }
+
             var context = await BuildContextAsync(task, memoryContext);
 
             var prompt = $@"
@@ -54,6 +61,7 @@ Backstory: {Backstory}
 
 Task Description: {task.Description}
 Expected Output: {task.ExpectedOutput}
+{GetStructuredOutputInstruction(task)}
 
 Context:
 {context}
@@ -84,6 +92,37 @@ Please execute the task.
             }
 
             return output;
+        }
+
+        private bool _knowledgeIngested = false;
+
+        private async Task IngestKnowledgeAsync(IMemoryContext memoryContext)
+        {
+            foreach (var source in KnowledgeSources)
+            {
+                var chunks = await source.GetContentChunksAsync();
+                foreach (var chunk in chunks)
+                {
+                    var key = Guid.NewGuid().ToString();
+                    await memoryContext.LongTerm.SaveAsync(key, chunk);
+                }
+            }
+        }
+
+        private string GetStructuredOutputInstruction(ICrewTask task)
+        {
+            if (task.OutputType == null) return string.Empty;
+
+            // Generate a JSON schema or simple description of the type
+            // For MVP, we'll just ask for JSON matching the properties.
+            var properties = task.OutputType.GetProperties().Select(p => $"{p.Name} ({p.PropertyType.Name})");
+            return $@"
+IMPORTANT: You MUST return the result as a valid JSON object matching this schema:
+{{
+  {string.Join(",\n  ", properties)}
+}}
+Do not include any markdown formatting (like ```json). Just the raw JSON string.
+";
         }
 
         private async Task<string> BuildContextAsync(ICrewTask task, IMemoryContext? memoryContext)
