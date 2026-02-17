@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace CrewAI.DotNet.Core.Interfaces
 {
     public interface ILongTermMemory

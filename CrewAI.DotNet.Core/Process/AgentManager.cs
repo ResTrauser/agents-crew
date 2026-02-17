@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using CrewAI.DotNet.Core.Interfaces;
 
 namespace CrewAI.DotNet.Core.Process
@@ -9,7 +11,7 @@ namespace CrewAI.DotNet.Core.Process
 
         public AgentManager(IEnumerable<IAgent>? initialAgents = null)
         {
-            if (initialAgents is not null)
+            if (initialAgents != null)
             {
                 foreach (var agent in initialAgents)
                 {
