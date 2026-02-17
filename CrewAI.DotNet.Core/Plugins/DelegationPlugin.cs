@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Interfaces;
 using CrewAI.DotNet.Core.Models;
 using Microsoft.SemanticKernel;
@@ -40,7 +39,7 @@ namespace CrewAI.DotNet.Core.Plugins
         public string ListAgents()
         {
             var agents = _agentManager.ListAgents();
-            return string.Join(", ", System.Linq.Enumerable.Select(agents, a => a.Role));
+            return string.Join(", ", Enumerable.Select(agents, a => a.Role));
         }
     }
 }

@@ -12,13 +12,11 @@ namespace CrewAI.DotNet.Core.Process
         {
             foreach (var task in tasks)
             {
-                var agent = task.AssignedAgent ?? agents.FirstOrDefault();
-                if (agent is null)
-                {
-                    throw new InvalidOperationException(
+                var agent =
+                    (task.AssignedAgent ?? agents.FirstOrDefault())
+                    ?? throw new InvalidOperationException(
                         $"No agent assigned to task: {task.Description}"
                     );
-                }
 
                 // Execute task
                 await agent.ExecuteAsync(task, memoryContext);

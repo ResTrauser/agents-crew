@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using CrewAI.DotNet.Core.Interfaces;
 
 namespace CrewAI.DotNet.Core.Memory
 {
     public class ShortTermMemory : IShortTermMemory
     {
-        private readonly List<string> _memory = new();
+        private readonly List<string> _memory = [];
 
         public void Add(string content)
         {

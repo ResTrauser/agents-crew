@@ -1,18 +1,10 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Interfaces;
 
 namespace CrewAI.DotNet.Core.Knowledge
 {
-    public class TextFileKnowledgeSource : IKnowledgeSource
+    public class TextFileKnowledgeSource(string filePath) : IKnowledgeSource
     {
-        private readonly string _filePath;
-
-        public TextFileKnowledgeSource(string filePath)
-        {
-            _filePath = filePath;
-        }
+        private readonly string _filePath = filePath;
 
         public async Task<IEnumerable<string>> GetContentChunksAsync()
         {
@@ -25,7 +17,7 @@ namespace CrewAI.DotNet.Core.Knowledge
 
             // Simple chunking strategy: Split by paragraphs for now.
             // In a real system, we'd use a more sophisticated chunker (token-based).
-            var chunks = content.Split(new[] { "\n\n" }, System.StringSplitOptions.RemoveEmptyEntries);
+            var chunks = content.Split(["\n\n"], StringSplitOptions.RemoveEmptyEntries);
 
             return chunks;
         }
