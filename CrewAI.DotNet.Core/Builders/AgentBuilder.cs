@@ -1,7 +1,6 @@
-using System.Collections.Generic;
+using CrewAI.DotNet.Core.Configuration;
 using CrewAI.DotNet.Core.Interfaces;
 using CrewAI.DotNet.Core.Models;
-using CrewAI.DotNet.Core.Configuration;
 using CrewAI.DotNet.Core.Plugins;
 using Microsoft.SemanticKernel;
 
@@ -53,7 +52,10 @@ namespace CrewAI.DotNet.Core.Builders
             return this;
         }
 
-        public AgentBuilder WithDelegation(IAgentManager manager, IMemoryContext? memoryContext = null)
+        public AgentBuilder WithDelegation(
+            IAgentManager manager,
+            IMemoryContext? memoryContext = null
+        )
         {
             // We can't add plugins to _kernel directly if it's not set yet.
             // And if it is set, we modify it?
@@ -68,24 +70,31 @@ namespace CrewAI.DotNet.Core.Builders
             // But `KernelPluginFactory.CreateFromObject` creates a `KernelPlugin`.
             // It doesn't require a Kernel instance.
 
-            var plugin = KernelPluginFactory.CreateFromObject(new DelegationPlugin(manager, memoryContext), "Delegation");
+            var plugin = KernelPluginFactory.CreateFromObject(
+                new DelegationPlugin(manager, memoryContext),
+                "Delegation"
+            );
             _tools.Add(plugin);
             return this;
         }
 
-        public AgentBuilder WithAgentCreation(IAgentManager manager, Kernel baseKernel, IMemoryContext? memoryContext = null)
+        public AgentBuilder WithAgentCreation(
+            IAgentManager manager,
+            Kernel baseKernel,
+            IMemoryContext? memoryContext = null
+        )
         {
-            var plugin = KernelPluginFactory.CreateFromObject(new AgentCreationPlugin(manager, baseKernel, memoryContext), "AgentCreation");
+            var plugin = KernelPluginFactory.CreateFromObject(
+                new AgentCreationPlugin(manager, baseKernel, memoryContext),
+                "AgentCreation"
+            );
             _tools.Add(plugin);
             return this;
         }
 
         public IAgent Build()
         {
-            var agent = new Agent(_role, _goal, _backstory, _kernel)
-            {
-                Tools = _tools
-            };
+            var agent = new Agent(_role, _goal, _backstory, _kernel) { Tools = _tools };
             return agent;
         }
     }

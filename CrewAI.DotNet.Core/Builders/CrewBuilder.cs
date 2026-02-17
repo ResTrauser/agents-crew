@@ -1,8 +1,7 @@
-using System.Collections.Generic;
 using CrewAI.DotNet.Core.Interfaces;
+using CrewAI.DotNet.Core.Memory;
 using CrewAI.DotNet.Core.Models;
 using CrewAI.DotNet.Core.Process;
-using CrewAI.DotNet.Core.Memory;
 using Microsoft.SemanticKernel.Memory;
 
 namespace CrewAI.DotNet.Core.Builders

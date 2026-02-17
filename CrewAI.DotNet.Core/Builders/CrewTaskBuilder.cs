@@ -1,6 +1,6 @@
+using CrewAI.DotNet.Core.Configuration;
 using CrewAI.DotNet.Core.Interfaces;
 using CrewAI.DotNet.Core.Models;
-using CrewAI.DotNet.Core.Configuration;
 
 namespace CrewAI.DotNet.Core.Builders
 {
