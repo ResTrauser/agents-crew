@@ -21,7 +21,7 @@ namespace CrewAI.DotNet.Core.Plugins
         )
         {
             var agent = _agentManager.GetAgent(agentRole);
-            if (agent == null)
+            if (agent is null)
             {
                 return $"Error: Agent with role '{agentRole}' not found. Available agents: {string.Join(", ", _agentManager.ListAgents())}";
             }

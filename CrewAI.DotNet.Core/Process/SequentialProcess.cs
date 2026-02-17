@@ -13,7 +13,7 @@ namespace CrewAI.DotNet.Core.Process
             foreach (var task in tasks)
             {
                 var agent = task.AssignedAgent ?? agents.FirstOrDefault();
-                if (agent == null)
+                if (agent is null)
                 {
                     throw new InvalidOperationException(
                         $"No agent assigned to task: {task.Description}"

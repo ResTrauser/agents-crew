@@ -9,7 +9,7 @@ namespace CrewAI.DotNet.Core.Process
 
         public AgentManager(IEnumerable<IAgent>? initialAgents = null)
         {
-            if (initialAgents != null)
+            if (initialAgents is not null)
             {
                 foreach (var agent in initialAgents)
                 {

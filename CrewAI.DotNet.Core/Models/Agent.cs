@@ -17,7 +17,7 @@ namespace CrewAI.DotNet.Core.Models
 
         public async Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null)
         {
-            if (Kernel == null)
+            if (Kernel is null)
             {
                 throw new InvalidOperationException("Agent Kernel is not initialized.");
             }
@@ -35,7 +35,7 @@ namespace CrewAI.DotNet.Core.Models
                 }
             }
 
-            if (memoryContext != null && !_knowledgeIngested)
+            if (memoryContext is not null && !_knowledgeIngested)
             {
                 await IngestKnowledgeAsync(memoryContext);
                 _knowledgeIngested = true;
@@ -77,7 +77,7 @@ Please execute the task.
 
             var output = result.GetValue<string>() ?? string.Empty;
 
-            if (memoryContext != null)
+            if (memoryContext is not null)
             {
                 memoryContext.ShortTerm.Add($"Task: {task.Description}\nResult: {output}");
                 // Simple implementation: Key is task description, Content is output
@@ -104,7 +104,7 @@ Please execute the task.
 
         private string GetStructuredOutputInstruction(ICrewTask task)
         {
-            if (task.OutputType == null)
+            if (task.OutputType is null)
                 return string.Empty;
 
             // Generate a JSON schema or simple description of the type
@@ -123,7 +123,7 @@ Do not include any markdown formatting (like ```json). Just the raw JSON string.
 
         private async Task<string> BuildContextAsync(ICrewTask task, IMemoryContext? memoryContext)
         {
-            if (memoryContext == null)
+            if (memoryContext is null)
                 return string.Empty;
 
             var shortTerm = string.Join("\n", memoryContext.ShortTerm.Get());
