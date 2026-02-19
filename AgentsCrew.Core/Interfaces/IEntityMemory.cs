@@ -1,0 +1,10 @@
+using System.Threading.Tasks;
+
+namespace AgentsCrew.Core.Interfaces
+{
+    public interface IEntityMemory
+    {
+        Task AddEntityAsync(string entity, string description);
+        Task<string> GetEntityAsync(string entity);
+    }
+}

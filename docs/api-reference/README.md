@@ -1,6 +1,6 @@
 # API Reference
 
-This section provides an overview of the key interfaces and classes available in the **CrewAI.DotNet** library.
+This section provides an overview of the key interfaces and classes available in the **AgentsCrew** library.
 
 ## Core Interfaces
 
