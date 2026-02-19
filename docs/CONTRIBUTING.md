@@ -1,4 +1,4 @@
-# Contributing to CrewAI .NET
+# Contributing to Agents Crew
 
 We welcome contributions! Please follow these guidelines.
 

@@ -11,7 +11,7 @@ Ensure you have followed the [Installation Guide](installation.md).
 We use the fluent `AgentBuilder` API to define agents.
 
 ```csharp
-using CrewAI.DotNet.Core.Builders;
+using AgentsCrew.Core.Builders;
 using Microsoft.SemanticKernel;
 
 // Initialize Semantic Kernel (replace with real OpenAI setup)
@@ -39,7 +39,7 @@ var writer = new AgentBuilder()
 Tasks are specific units of work assigned to agents.
 
 ```csharp
-using CrewAI.DotNet.Core.Builders;
+using AgentsCrew.Core.Builders;
 
 var task1 = new CrewTaskBuilder()
     .WithDescription("Research the latest trends in AI Agents for 2024.")
@@ -59,7 +59,7 @@ var task2 = new CrewTaskBuilder()
 Combine agents and tasks into a Crew and kick off execution.
 
 ```csharp
-using CrewAI.DotNet.Core.Builders;
+using AgentsCrew.Core.Builders;
 
 var crew = new CrewBuilder()
     .AddAgent(researcher)

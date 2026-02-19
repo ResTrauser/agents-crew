@@ -8,7 +8,7 @@
 
 ## Installation
 
-This framework is currently distributed as a source-available library. You can clone the repository and reference the `CrewAI.DotNet.Core` project.
+This framework is currently distributed as a source-available library. You can clone the repository and reference the `AgentsCrew.Core` project.
 
 1.  **Clone the Repository:**
     ```bash
@@ -20,7 +20,7 @@ This framework is currently distributed as a source-available library. You can c
     If you are creating a new console application:
     ```bash
     dotnet new console -n MyCrewApp
-    dotnet add MyCrewApp/MyCrewApp.csproj reference CrewAI.DotNet.Core/CrewAI.DotNet.Core.csproj
+    dotnet add MyCrewApp/MyCrewApp.csproj reference AgentsCrew.Core/AgentsCrew.Core.csproj
     ```
 
 3.  **Install Dependencies:**

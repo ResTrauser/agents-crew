@@ -1,10 +1,10 @@
 # Architecture Overview
 
-CrewAI .NET is designed as a modular, extensible framework built on top of Microsoft's **Semantic Kernel**.
+Agents Crew is designed as a modular, extensible framework built on top of Microsoft's **Semantic Kernel**.
 
 ## Project Structure
 
-- **Core (`CrewAI.DotNet.Core`):**
+- **Core (`AgentsCrew.Core`):**
     - **Models:** `Agent`, `CrewTask`, `Crew`
     - **Interfaces:** `IAgent`, `ICrewTask`, `ICrew`, `IProcess`, `IMemoryContext`
     - **Process:** `SequentialProcess`, `HierarchicalProcess`, `AgentManager`
@@ -14,15 +14,15 @@ CrewAI .NET is designed as a modular, extensible framework built on top of Micro
     - **Events:** `IEventSystem`
     - **Builders:** Fluent API (`AgentBuilder`, etc.)
 
-- **Tools (`CrewAI.DotNet.Tools`):**
+- **Tools (`AgentsCrew.Tools`):**
     - Standard tool implementations (`FileTool`, `WebSearchTool`).
     - Depends on `Core` interfaces.
 
-- **Example (`CrewAI.DotNet.Example`):**
+- **Example (`AgentsCrew.Example`):**
     - Console application demonstrating usage.
     - Includes `MockChatCompletionService` for testing without API keys.
 
-- **Tests (`CrewAI.DotNet.Tests`):**
+- **Tests (`AgentsCrew.Tests`):**
     - Unit and integration tests using xUnit.
 
 ## High-Level Diagram
