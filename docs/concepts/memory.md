@@ -1,6 +1,6 @@
 # Memory System
 
-Agents Crew implements a sophisticated memory architecture to give agents context and continuity. The memory is managed via `IMemoryContext` and is shared across the Crew execution.
+CrewAI .NET implements a sophisticated memory architecture to give agents context and continuity. The memory is managed via `IMemoryContext` and is shared across the Crew execution.
 
 ## 1. Short-Term Memory
 

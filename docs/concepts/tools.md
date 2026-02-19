@@ -4,11 +4,11 @@ Tools (skills/plugins) extend an agent's capabilities beyond text generation. Th
 
 ## Semantic Kernel Plugins
 
-In Agents Crew, tools are simply **Semantic Kernel Plugins**. Any class with methods decorated with `[KernelFunction]` can be a tool.
+In CrewAI .NET, tools are simply **Semantic Kernel Plugins**. Any class with methods decorated with `[KernelFunction]` can be a tool.
 
 ## Standard Toolkit
 
-The library includes a `AgentsCrew.Tools` package with standard tools:
+The library includes a `CrewAI.DotNet.Tools` package with standard tools:
 
 ### FileTool
 Reads and writes local files.
