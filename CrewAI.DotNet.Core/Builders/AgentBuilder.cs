@@ -14,6 +14,10 @@ namespace CrewAI.DotNet.Core.Builders
         private string _backstory = string.Empty;
         private Kernel? _kernel;
         private readonly List<KernelPlugin> _tools = new();
+        private int _maxIter = 25;
+        private System.Action<string>? _stepCallback;
+        private bool _allowDelegation = true;
+        private bool _cache = true;
 
         public AgentBuilder WithRole(string role)
         {
@@ -30,6 +34,30 @@ namespace CrewAI.DotNet.Core.Builders
         public AgentBuilder WithBackstory(string backstory)
         {
             _backstory = backstory;
+            return this;
+        }
+
+        public AgentBuilder WithMaxIter(int maxIter)
+        {
+            _maxIter = maxIter;
+            return this;
+        }
+
+        public AgentBuilder WithStepCallback(System.Action<string> callback)
+        {
+            _stepCallback = callback;
+            return this;
+        }
+
+        public AgentBuilder WithDelegationAllowed(bool allowDelegation)
+        {
+            _allowDelegation = allowDelegation;
+            return this;
+        }
+
+        public AgentBuilder WithCache(bool cache)
+        {
+            _cache = cache;
             return this;
         }
 
@@ -82,7 +110,7 @@ namespace CrewAI.DotNet.Core.Builders
 
         public IAgent Build()
         {
-            var agent = new Agent(_role, _goal, _backstory, _kernel)
+            var agent = new Agent(_role, _goal, _backstory, _kernel, _maxIter, _stepCallback, _allowDelegation, _cache)
             {
                 Tools = _tools
             };

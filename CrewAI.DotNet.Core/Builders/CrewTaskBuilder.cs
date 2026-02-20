@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using CrewAI.DotNet.Core.Interfaces;
 using CrewAI.DotNet.Core.Models;
 using CrewAI.DotNet.Core.Configuration;
@@ -9,6 +11,10 @@ namespace CrewAI.DotNet.Core.Builders
         private string _description = string.Empty;
         private string _expectedOutput = string.Empty;
         private IAgent? _assignedAgent;
+        private IList<ICrewTask>? _context;
+        private string? _outputFile;
+        private Action<string>? _callback;
+        private bool _asyncExecution = false;
 
         public CrewTaskBuilder WithDescription(string description)
         {
@@ -35,9 +41,33 @@ namespace CrewAI.DotNet.Core.Builders
             return this;
         }
 
+        public CrewTaskBuilder WithContext(IList<ICrewTask> context)
+        {
+            _context = context;
+            return this;
+        }
+
+        public CrewTaskBuilder WithOutputFile(string outputFile)
+        {
+            _outputFile = outputFile;
+            return this;
+        }
+
+        public CrewTaskBuilder WithCallback(Action<string> callback)
+        {
+            _callback = callback;
+            return this;
+        }
+
+        public CrewTaskBuilder WithAsyncExecution(bool asyncExecution)
+        {
+            _asyncExecution = asyncExecution;
+            return this;
+        }
+
         public ICrewTask Build()
         {
-            return new CrewTask(_description, _expectedOutput, _assignedAgent);
+            return new CrewTask(_description, _expectedOutput, _assignedAgent, null, _context, _outputFile, _callback, _asyncExecution);
         }
     }
 }

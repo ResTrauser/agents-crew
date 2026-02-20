@@ -13,17 +13,25 @@ namespace CrewAI.DotNet.Core.Models
         public string Role { get; set; }
         public string Goal { get; set; }
         public string Backstory { get; set; }
+        public int MaxIter { get; set; }
+        public Action<string>? StepCallback { get; set; }
+        public bool AllowDelegation { get; set; }
+        public bool Cache { get; set; }
         public IList<KernelPlugin> Tools { get; set; } = new List<KernelPlugin>();
         public IList<IKnowledgeSource> KnowledgeSources { get; set; } = new List<IKnowledgeSource>();
 
         public Kernel? Kernel { get; set; }
 
-        public Agent(string role, string goal, string backstory, Kernel? kernel = null)
+        public Agent(string role, string goal, string backstory, Kernel? kernel = null, int maxIter = 25, Action<string>? stepCallback = null, bool allowDelegation = true, bool cache = true)
         {
             Role = role;
             Goal = goal;
             Backstory = backstory;
             Kernel = kernel;
+            MaxIter = maxIter;
+            StepCallback = stepCallback;
+            AllowDelegation = allowDelegation;
+            Cache = cache;
         }
 
         public async Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null)
@@ -84,6 +92,26 @@ Please execute the task.
 
             var output = result.GetValue<string>() ?? string.Empty;
 
+            // Set task output
+            task.Output = output;
+
+            // Save to output file if specified
+            if (!string.IsNullOrEmpty(task.OutputFile))
+            {
+                try
+                {
+                    System.IO.File.WriteAllText(task.OutputFile, output);
+                }
+                catch (Exception ex)
+                {
+                    // Log or ignore? For now ignore but maybe Console.WriteLine
+                    Console.WriteLine($"Failed to write output file: {ex.Message}");
+                }
+            }
+
+            // Invoke callback if specified
+            task.Callback?.Invoke(output);
+
             if (memoryContext != null)
             {
                 memoryContext.ShortTerm.Add($"Task: {task.Description}\nResult: {output}");
@@ -127,18 +155,35 @@ Do not include any markdown formatting (like ```json). Just the raw JSON string.
 
         private async Task<string> BuildContextAsync(ICrewTask task, IMemoryContext? memoryContext)
         {
-            if (memoryContext == null) return string.Empty;
+            var contextBuilder = new System.Text.StringBuilder();
 
-            var shortTerm = string.Join("\n", memoryContext.ShortTerm.Get());
-            var longTerm = await memoryContext.LongTerm.SearchAsync(task.Description);
+            // Include Task Context
+            if (task.Context != null && task.Context.Count > 0)
+            {
+                contextBuilder.AppendLine("Previous Tasks Context:");
+                foreach (var ctxTask in task.Context)
+                {
+                    if (!string.IsNullOrEmpty(ctxTask.Output))
+                    {
+                        contextBuilder.AppendLine($"Task: {ctxTask.Description}");
+                        contextBuilder.AppendLine($"Output: {ctxTask.Output}");
+                        contextBuilder.AppendLine("---");
+                    }
+                }
+            }
 
-            return $@"
-Short Term Memory:
-{shortTerm}
+            if (memoryContext != null)
+            {
+                var shortTerm = string.Join("\n", memoryContext.ShortTerm.Get());
+                var longTerm = await memoryContext.LongTerm.SearchAsync(task.Description);
 
-Long Term Memory (relevant):
-{longTerm}
-";
+                contextBuilder.AppendLine("Short Term Memory:");
+                contextBuilder.AppendLine(shortTerm);
+                contextBuilder.AppendLine("Long Term Memory (relevant):");
+                contextBuilder.AppendLine(longTerm);
+            }
+
+            return contextBuilder.ToString();
         }
     }
 }
