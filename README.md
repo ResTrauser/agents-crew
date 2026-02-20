@@ -1,6 +1,6 @@
-# CrewAI .NET
+# Agents Crew
 
-**CrewAI .NET** is a powerful framework for orchestrating role-playing autonomous AI agents in .NET. It is inspired by the Python [CrewAI](https://github.com/joaomdmoura/crewAI) library and built on top of [Microsoft Semantic Kernel](https://github.com/microsoft/semantic-kernel).
+**Agents Crew** is a powerful framework for orchestrating role-playing autonomous AI agents in .NET. It is inspired by the Python [CrewAI](https://github.com/joaomdmoura/crewAI) library and built on top of [Microsoft Semantic Kernel](https://github.com/microsoft/semantic-kernel).
 
 ## Features
 
