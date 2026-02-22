@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrewAI.DotNet.Tests", "Crew
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrewAI.DotNet.Tools", "CrewAI.DotNet.Tools\CrewAI.DotNet.Tools.csproj", "{6C985939-B94F-44B9-B82F-ADEBEB27645D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrewAI.DotNet.GeminiApp", "CrewAI.DotNet.GeminiApp\CrewAI.DotNet.GeminiApp.csproj", "{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|x64.Build.0 = Release|Any CPU
 		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|x86.ActiveCfg = Release|Any CPU
 		{6C985939-B94F-44B9-B82F-ADEBEB27645D}.Release|x86.Build.0 = Release|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Debug|x64.Build.0 = Debug|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Debug|x86.Build.0 = Debug|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Release|x64.ActiveCfg = Release|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Release|x64.Build.0 = Release|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Release|x86.ActiveCfg = Release|Any CPU
+		{62159AF1-9AC0-4CCE-83B7-E697B6AFC0FF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
