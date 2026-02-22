@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using CrewAI.DotNet.Core.Interfaces;
 
 namespace CrewAI.DotNet.Core.Models
@@ -15,13 +17,22 @@ namespace CrewAI.DotNet.Core.Models
         public bool AsyncExecution { get; set; }
         public bool HumanInput { get; set; }
         public System.Action<ICrewTask>? OnTaskCompleted { get; set; }
+        public IList<ICrewTask>? Context { get; set; }
+        public string? OutputFile { get; set; }
+        public Action<string>? Callback { get; set; }
+        public bool AsyncExecution { get; set; }
+        public string? Output { get; set; }
 
-        public CrewTask(string description, string expectedOutput, IAgent? assignedAgent = null, System.Type? outputType = null)
+        public CrewTask(string description, string expectedOutput, IAgent? assignedAgent = null, System.Type? outputType = null, IList<ICrewTask>? context = null, string? outputFile = null, Action<string>? callback = null, bool asyncExecution = false)
         {
             Description = description;
             ExpectedOutput = expectedOutput;
             AssignedAgent = assignedAgent;
             OutputType = outputType;
+            Context = context;
+            OutputFile = outputFile;
+            Callback = callback;
+            AsyncExecution = asyncExecution;
         }
     }
 }
