@@ -18,10 +18,13 @@ namespace CrewAI.DotNet.Core.Models
         public string Role { get; }
         public string Goal { get; }
         public string Backstory { get; }
-        public int MaxIter { get; } = 1;
+        public int MaxIter { get; set; } = 1;
         public Action<string>? StepCallback { get; set; }
-        public bool AllowDelegation { get; } = false;
-        public bool Cache { get; } = false;
+        public bool AllowDelegation { get; set; } = false;
+        public bool Cache { get; set; } = false;
+        public TimeSpan? MaxExecutionTime { get; set; }
+        public CrewAI.DotNet.Core.Telemetry.UsageMetrics Metrics { get; } = new CrewAI.DotNet.Core.Telemetry.UsageMetrics();
+        public Microsoft.Extensions.Logging.ILogger<IAgent>? Logger { get; set; }
         public IList<KernelPlugin> Tools { get; } = new List<KernelPlugin>();
         public IList<IKnowledgeSource> KnowledgeSources { get; } = new List<IKnowledgeSource>();
 
@@ -49,7 +52,7 @@ namespace CrewAI.DotNet.Core.Models
             Backstory = "Wrapped Semantic Kernel Agent";
         }
 
-        public async Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null)
+        public async Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null, System.Threading.CancellationToken cancellationToken = default)
         {
             if (_function == null)
             {

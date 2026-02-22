@@ -11,19 +11,15 @@ namespace CrewAI.DotNet.Core.Interfaces
         string Role { get; }
         string Goal { get; }
         string Backstory { get; }
-        int MaxIter { get; }
-        System.Action<string>? StepCallback { get; }
-        bool AllowDelegation { get; }
-        bool Cache { get; }
+        int MaxIter { get; set; }
+        System.Action<string>? StepCallback { get; set; }
+        bool AllowDelegation { get; set; }
+        bool Cache { get; set; }
         IList<KernelPlugin> Tools { get; }
         IList<IKnowledgeSource> KnowledgeSources { get; }
 
         // Paridad CrewAI
-        int MaxIter { get; set; }
         System.TimeSpan? MaxExecutionTime { get; set; }
-        bool AllowDelegation { get; set; }
-        bool Cache { get; set; }
-        System.Action<string>? StepCallback { get; set; }
         UsageMetrics Metrics { get; }
         ILogger<IAgent>? Logger { get; set; }
 

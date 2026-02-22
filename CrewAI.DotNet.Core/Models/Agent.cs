@@ -17,10 +17,7 @@ namespace CrewAI.DotNet.Core.Models
         public string Role { get; set; }
         public string Goal { get; set; }
         public string Backstory { get; set; }
-        public int MaxIter { get; set; }
-        public Action<string>? StepCallback { get; set; }
-        public bool AllowDelegation { get; set; }
-        public bool Cache { get; set; }
+
         public IList<KernelPlugin> Tools { get; set; } = new List<KernelPlugin>();
         public IList<IKnowledgeSource> KnowledgeSources { get; set; } = new List<IKnowledgeSource>();
 
