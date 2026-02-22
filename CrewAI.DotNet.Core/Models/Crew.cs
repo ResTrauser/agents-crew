@@ -12,6 +12,11 @@ namespace CrewAI.DotNet.Core.Models
         public IMemoryContext MemoryContext { get; set; }
         public IAgentManager AgentManager { get; }
 
+        // Paridad CrewAI
+        public int Verbose { get; set; } = 0;
+        public bool FullOutput { get; set; } = false;
+        public object? ManagerLlm { get; set; } // En un futuro puede ser un objeto de configuración específico
+
         public Crew(IList<IAgent> agents, IList<ICrewTask> tasks, IProcess process, IMemoryContext memoryContext, IAgentManager? agentManager = null)
         {
             AgentManager = agentManager ?? new CrewAI.DotNet.Core.Process.AgentManager(agents);
@@ -22,7 +27,8 @@ namespace CrewAI.DotNet.Core.Models
 
         public async Task KickoffAsync()
         {
-            await Process.ExecuteAsync(Agents, Tasks, MemoryContext);
+            var runner = new CrewAI.DotNet.Core.Execution.CrewRunner(this);
+            await runner.StartAsync();
         }
     }
 }

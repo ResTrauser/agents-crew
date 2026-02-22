@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
+using CrewAI.DotNet.Core.Telemetry;
+using Microsoft.Extensions.Logging;
 
 namespace CrewAI.DotNet.Core.Interfaces
 {
@@ -9,9 +11,17 @@ namespace CrewAI.DotNet.Core.Interfaces
         string Role { get; }
         string Goal { get; }
         string Backstory { get; }
-        IList<KernelPlugin> Tools { get; }
         IList<IKnowledgeSource> KnowledgeSources { get; }
 
-        Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null);
+        // Paridad CrewAI
+        int MaxIter { get; set; }
+        System.TimeSpan? MaxExecutionTime { get; set; }
+        bool AllowDelegation { get; set; }
+        bool Cache { get; set; }
+        System.Action<string>? StepCallback { get; set; }
+        UsageMetrics Metrics { get; }
+        ILogger<IAgent>? Logger { get; set; }
+
+        Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null, System.Threading.CancellationToken cancellationToken = default);
     }
 }

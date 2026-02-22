@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 using CrewAI.DotNet.Core.Interfaces;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using CrewAI.DotNet.Core.Telemetry;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using CrewAI.DotNet.Core.Configuration;
 
 namespace CrewAI.DotNet.Core.Models
 {
@@ -16,6 +20,15 @@ namespace CrewAI.DotNet.Core.Models
         public IList<KernelPlugin> Tools { get; set; } = new List<KernelPlugin>();
         public IList<IKnowledgeSource> KnowledgeSources { get; set; } = new List<IKnowledgeSource>();
 
+        // Paridad CrewAI
+        public int MaxIter { get; set; } = 15; // Límite por defecto
+        public TimeSpan? MaxExecutionTime { get; set; }
+        public bool AllowDelegation { get; set; } = true;
+        public bool Cache { get; set; } = true;
+        public Action<string>? StepCallback { get; set; }
+        public UsageMetrics Metrics { get; } = new UsageMetrics();
+        public ILogger<IAgent>? Logger { get; set; }
+
         public Kernel? Kernel { get; set; }
 
         public Agent(string role, string goal, string backstory, Kernel? kernel = null)
@@ -26,7 +39,7 @@ namespace CrewAI.DotNet.Core.Models
             Kernel = kernel;
         }
 
-        public async Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null)
+        public async Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null, System.Threading.CancellationToken cancellationToken = default)
         {
             if (Kernel == null)
             {
@@ -75,14 +88,49 @@ Please execute the task.
             // Falling back to manual loop if auto-invoke is not supported by the service is complex.
             // Assuming OpenAIPromptExecutionSettings works with the underlying mechanism (filters).
 
+            Logger?.LogInformation("Agent {Role} starting execution for task: {TaskDescription}", Role, task.Description);
+
             var executionSettings = new OpenAIPromptExecutionSettings()
             {
                 ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
             };
 
-            var result = await scopedKernel.InvokePromptAsync(prompt, new KernelArguments(executionSettings));
+            var stopWatch = Stopwatch.StartNew();
+            
+            // Política de resiliencia con Polly
+            var retryPolicy = ResiliencePolicies.GetDefaultRetryPolicy<FunctionResult>();
+            
+            FunctionResult result;
+            try
+            {
+                 result = await retryPolicy.ExecuteAsync(async () =>
+                 {
+                      return await scopedKernel.InvokePromptAsync(prompt, new KernelArguments(executionSettings), cancellationToken: cancellationToken);
+                 });
+            }
+            catch(Exception ex)
+            {
+                Logger?.LogError(ex, "Agent {Role} failed to execute task: {TaskDescription}", Role, task.Description);
+                throw;
+            }
+
+            stopWatch.Stop();
+            Metrics.AddExecutionTime(stopWatch.ElapsedMilliseconds);
+
+            // Obtención manual de tokens si estuviera disponible.
+            // Para SK varía dependiendo del connector, normalmente accesible en metadata:
+            if (result.Metadata != null && result.Metadata.TryGetValue("Usage", out var usageObj) && usageObj != null)
+            {
+               // Lógica simplificada de extracción asumiendo la estructura genérica.
+               // Metrics.AddTokens(...)
+            }
 
             var output = result.GetValue<string>() ?? string.Empty;
+
+            Logger?.LogDebug("Agent {Role} completed execution. Output length: {OutputLength}", Role, output.Length);
+
+            // Callback ejecución de paso (en el futuro se puede ubicar dentro del loop de Semantic Kernel si se usan filtros).
+            StepCallback?.Invoke(output);
 
             if (memoryContext != null)
             {
