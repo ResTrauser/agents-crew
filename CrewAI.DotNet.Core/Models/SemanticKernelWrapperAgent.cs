@@ -82,5 +82,41 @@ namespace CrewAI.DotNet.Core.Models
 
             return output;
         }
+
+        public async IAsyncEnumerable<string> ExecuteStreamingAsync(ICrewTask task, IMemoryContext? memoryContext = null, [System.Runtime.CompilerServices.EnumeratorCancellation] System.Threading.CancellationToken cancellationToken = default)
+        {
+            if (_function == null)
+            {
+                throw new InvalidOperationException("No function or prompt configured for this agent.");
+            }
+
+            var arguments = new KernelArguments
+            {
+                ["input"] = task.Description
+            };
+
+            if (memoryContext != null)
+            {
+                 var history = string.Join("\n", memoryContext.ShortTerm.Get());
+                 arguments["history"] = history;
+            }
+
+            var fullResponse = new System.Text.StringBuilder();
+
+            var resultStream = _kernel.InvokeStreamingAsync<string>(_function, arguments, cancellationToken);
+
+            await foreach (var chunk in resultStream)
+            {
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    fullResponse.Append(chunk);
+                    StepCallback?.Invoke(chunk);
+                    yield return chunk;
+                }
+            }
+
+            task.Output = fullResponse.ToString();
+            task.Callback?.Invoke(task.Output);
+        }
     }
 }
