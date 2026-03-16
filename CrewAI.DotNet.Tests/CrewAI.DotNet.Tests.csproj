@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CrewAI.DotNet.Core\CrewAI.DotNet.Core.csproj" />
+    <ProjectReference Include="..\CrewAI.DotNet.Tools\CrewAI.DotNet.Tools.csproj" />
   </ItemGroup>
 
 </Project>
