@@ -109,6 +109,11 @@ Please execute the task.
 
             var stopWatch = Stopwatch.StartNew();
             
+            // Creación de Traza de OpenTelemetry
+            using var activity = CrewTelemetry.Source.StartActivity($"AgentExecute_{Role}");
+            activity?.SetTag("agent.role", Role);
+            activity?.SetTag("agent.task", task.Description);
+            
             // Política de resiliencia con Polly
             var retryPolicy = ResiliencePolicies.GetDefaultRetryPolicy<FunctionResult>();
             
@@ -119,25 +124,29 @@ Please execute the task.
                  {
                       return await scopedKernel.InvokePromptAsync(prompt, new KernelArguments(executionSettings), cancellationToken: cancellationToken);
                  });
+                 
+                 activity?.SetTag("agent.status", "Success");
             }
             catch(Exception ex)
             {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity?.SetTag("agent.status", "Failed");
                 Logger?.LogError(ex, "Agent {Role} failed to execute task: {TaskDescription}", Role, task.Description);
                 throw;
             }
 
             stopWatch.Stop();
             Metrics.AddExecutionTime(stopWatch.ElapsedMilliseconds);
+            activity?.SetTag("agent.execution_time_ms", stopWatch.ElapsedMilliseconds);
 
             // Obtención manual de tokens si estuviera disponible.
-            // Para SK varía dependiendo del connector, normalmente accesible en metadata:
             if (result.Metadata != null && result.Metadata.TryGetValue("Usage", out var usageObj) && usageObj != null)
             {
                // Lógica simplificada de extracción asumiendo la estructura genérica.
-               // Metrics.AddTokens(...)
             }
 
             var output = result.GetValue<string>() ?? string.Empty;
+            activity?.SetTag("agent.output_length", output.Length);
 
             Logger?.LogDebug("Agent {Role} completed execution. Output length: {OutputLength}", Role, output.Length);
 
@@ -230,23 +239,45 @@ Please execute the task.
 
             var fullResponse = new System.Text.StringBuilder();
 
-            // In a real scenario we'd use retry policies for streaming too, but SK InvokePromptStreamingAsync handles chunking.
-            var resultStream = scopedKernel.InvokePromptStreamingAsync<string>(
-                prompt,
-                new KernelArguments(executionSettings),
-                cancellationToken: cancellationToken);
+            using var activity = CrewTelemetry.Source.StartActivity($"AgentExecuteStreaming_{Role}");
+            activity?.SetTag("agent.role", Role);
+            activity?.SetTag("agent.task", task.Description);
 
-            await foreach (var chunk in resultStream)
+            var chunks = new List<string>();
+            try
             {
-                if (!string.IsNullOrEmpty(chunk))
+                var resultStream = scopedKernel.InvokePromptStreamingAsync<string>(
+                    prompt,
+                    new KernelArguments(executionSettings),
+                    cancellationToken: cancellationToken);
+
+                await foreach (var chunk in resultStream)
                 {
-                    fullResponse.Append(chunk);
-                    StepCallback?.Invoke(chunk);
-                    yield return chunk;
+                    if (!string.IsNullOrEmpty(chunk))
+                    {
+                        fullResponse.Append(chunk);
+                        StepCallback?.Invoke(chunk);
+                        chunks.Add(chunk);
+                    }
                 }
+                
+                activity?.SetTag("agent.status", "Success");
+            }
+            catch(Exception ex)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity?.SetTag("agent.status", "Failed");
+                Logger?.LogError(ex, "Agent {Role} failed to execute streaming task: {TaskDescription}", Role, task.Description);
+                throw;
+            }
+
+            foreach (var chunk in chunks)
+            {
+                yield return chunk;
             }
 
             task.Output = fullResponse.ToString();
+            activity?.SetTag("agent.output_length", task.Output.Length);
 
             if (!string.IsNullOrEmpty(task.OutputFile))
             {
