@@ -24,5 +24,6 @@ namespace CrewAI.DotNet.Core.Interfaces
         ILogger<IAgent>? Logger { get; set; }
 
         Task<string> ExecuteAsync(ICrewTask task, IMemoryContext? memoryContext = null, System.Threading.CancellationToken cancellationToken = default);
+        IAsyncEnumerable<string> ExecuteStreamingAsync(ICrewTask task, IMemoryContext? memoryContext = null, System.Threading.CancellationToken cancellationToken = default);
     }
 }

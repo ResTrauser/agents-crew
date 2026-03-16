@@ -100,6 +100,13 @@ Please execute the task.
                 ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
             };
 
+            if (task.OutputType != null)
+            {
+#pragma warning disable SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                executionSettings.ResponseFormat = typeof(object);
+#pragma warning restore SKEXP0010
+            }
+
             var stopWatch = Stopwatch.StartNew();
             
             // Política de resiliencia con Polly
@@ -165,6 +172,101 @@ Please execute the task.
             }
 
             return output;
+        }
+
+        public async IAsyncEnumerable<string> ExecuteStreamingAsync(ICrewTask task, IMemoryContext? memoryContext = null, [System.Runtime.CompilerServices.EnumeratorCancellation] System.Threading.CancellationToken cancellationToken = default)
+        {
+            if (Kernel == null)
+            {
+                throw new InvalidOperationException("Agent Kernel is not initialized.");
+            }
+
+            var scopedKernel = Kernel.Clone();
+
+            foreach (var tool in Tools)
+            {
+                if (!scopedKernel.Plugins.Contains(tool.Name))
+                {
+                    scopedKernel.Plugins.Add(tool);
+                }
+            }
+
+            if (memoryContext != null && !_knowledgeIngested)
+            {
+                await IngestKnowledgeAsync(memoryContext);
+                _knowledgeIngested = true;
+            }
+
+            var context = await BuildContextAsync(task, memoryContext);
+
+            var prompt = $@"
+You are a {Role}.
+Goal: {Goal}
+Backstory: {Backstory}
+
+Task Description: {task.Description}
+Expected Output: {task.ExpectedOutput}
+{GetStructuredOutputInstruction(task)}
+
+Context:
+{context}
+
+Please execute the task.
+";
+
+            Logger?.LogInformation("Agent {Role} starting streaming execution for task: {TaskDescription}", Role, task.Description);
+
+            var executionSettings = new OpenAIPromptExecutionSettings()
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+            };
+
+            if (task.OutputType != null)
+            {
+#pragma warning disable SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                executionSettings.ResponseFormat = typeof(object);
+#pragma warning restore SKEXP0010
+            }
+
+            var fullResponse = new System.Text.StringBuilder();
+
+            // In a real scenario we'd use retry policies for streaming too, but SK InvokePromptStreamingAsync handles chunking.
+            var resultStream = scopedKernel.InvokePromptStreamingAsync<string>(
+                prompt,
+                new KernelArguments(executionSettings),
+                cancellationToken: cancellationToken);
+
+            await foreach (var chunk in resultStream)
+            {
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    fullResponse.Append(chunk);
+                    StepCallback?.Invoke(chunk);
+                    yield return chunk;
+                }
+            }
+
+            task.Output = fullResponse.ToString();
+
+            if (!string.IsNullOrEmpty(task.OutputFile))
+            {
+                try
+                {
+                    System.IO.File.WriteAllText(task.OutputFile, task.Output);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to write output file: {ex.Message}");
+                }
+            }
+
+            task.Callback?.Invoke(task.Output);
+
+            if (memoryContext != null)
+            {
+                memoryContext.ShortTerm.Add($"Task: {task.Description}\nResult: {task.Output}");
+                await memoryContext.LongTerm.SaveAsync(task.Description, task.Output);
+            }
         }
 
         private bool _knowledgeIngested = false;
