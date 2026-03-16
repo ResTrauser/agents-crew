@@ -65,6 +65,7 @@ El coordinador de más alto nivel de la aplicación.
 ### 3.4. Procesos y Ejecución (`IProcess`)
 Define cómo la lista de tareas será consumida por los agentes.
 *   **`SequentialProcess`**: (Implementado por defecto). Itera estrictamente sobre `IList<ICrewTask>`. Resuelve dinámicamente el `task.Context` inyectando los text outputs anteriores en el *Description* actual. Emite eventos a `OnTaskCompleted` en cada paso exitoso.
+*   **`AsynchronousParallelProcess`**: Múltiples tareas sin dependencias mutuas pueden ser lanzadas e iteradas bajo Tasks concurrentes en Hilos (`Task.WhenAll`), multiplicando radicalmente el rendimiento global del equipo al prescindir de iteraciones bloqueantes para tareas en paralelo.
 *   **`HierarchicalProcess`**: (Estructura proyectada). Permite que un `ManagerAgent` designado reciba las tareas y determine, en tiempo de ejecución, a qué agente delegarla.
 
 ### 3.5. Sistema de Memoria (`IMemoryContext`)
@@ -115,4 +116,5 @@ await crew.KickoffAsync();
 ## 5. Extensibilidad
 
 *   **Custom Tools**: Para agregar capacidades a un agente, basta con escribir un Plugin nativo de Semantic Kernel (clase regular con atributos `[KernelFunction]`) y agregarlo usando `.Tools.Add()`. CrewAI.DotNet expondrá esa función y la orquestará mediante *auto invoke*.
-*   **Base de Datos Personalizadas**: Las implementaciones `IShortTermMemory` y `ILongTermMemory` pueden ser reemplazadas inyectando adaptadores de Redis o SQL Server al construir el `MemoryContext`.
+*   **Sandboxing de Herramientas**: Implementaciones integradas como `DockerExecutionTool` evidencian cómo construir herramientas de riesgo nulo. Un generador de Python, por ejemplo, puede instanciar el plugin Docker en `CrewAI.DotNet.Tools` para correr el script sin riesgos de infraestructura, capturar errores y retornar métricas.
+*   **Bases de Datos Personalizadas**: Las implementaciones `IShortTermMemory` y `ILongTermMemory` pueden ser reemplazadas inyectando adaptadores de Redis, Qdrant o SQL Server al construir el `MemoryContext`.

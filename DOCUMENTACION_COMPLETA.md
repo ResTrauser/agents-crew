@@ -34,8 +34,8 @@ Las tareas son las unidades de trabajo discretas que el Crew debe ejecutar.
 El "Crew" es el contenedor y ejecutor principal. 
 - Agrupa a todos los Agentes y Tareas.
 - Se puede configurar con un contexto de memoria (`MemoryContext`).
-- Define el proceso de ejecución (por defecto secuencial, o jerárquico).
-- Al llamar al método `KickoffAsync()`, el Crew inicia la orquestación, pasando los resultados de una tarea como contexto para la siguiente si es necesario, o permitiendo a los mánagers delegar.
+- Define el proceso de ejecución. Por defecto soporta ejecución `SequentialProcess` o ejecución simultánea a través de `AsynchronousParallelProcess`.
+- Al llamar al método `KickoffAsync()`, el Crew inicia la orquestación, pasando los resultados de una tarea como contexto para la siguiente dependiente, o ejecutando de forma paralela aquellas tareas sin dependencias.
 
 ---
 
@@ -49,8 +49,8 @@ Para que los agentes sean contextualmente inteligentes y recuerden interacciones
 
 ### 3.2. Herramientas y Plugins (Tools)
 Gracias a su construcción sobre **Microsoft Semantic Kernel**, todas las herramientas en CrewAI.DotNet son básicamente Plugins del Kernel.
-- Los agentes pueden usar funciones nativas de C# empaquetadas como Plugins, por ejemplo, realizar búsquedas web (`WebSearch`), leer o escribir archivos (`FileTool`), acceder a bases de datos, APIs de terceros, etc.
-- Esto le otorga al LLM la capacidad de "actuar" sobre el mundo real (Acciones a través de C#).
+- Los agentes pueden usar funciones nativas de C# empaquetadas como Plugins, por ejemplo, realizar búsquedas web (`WebSearch`), o leer o escribir archivos (`FileTool`).
+- **NUEVO: Sandboxing con Docker (`DockerExecutionTool`):** Para tareas donde el LLM genera código (Python o Bash) y requiere evaluarlo, los agentes pueden utilizar un sandbox seguro aprovisionando contenedores Docker al vuelo para evitar tocar el Host, garantizando máxima seguridad en el ambiente empresarial.
 
 ### 3.3. Delegación Dinámica (Dynamic Delegation)
 Mediante clases como `AgentManager` y la interfaz `IAgentManager`, los agentes con capacidades gerenciales pueden "subcontratar" o crear tareas al vuelo para enviarlas a agentes subordinados (por ejemplo, un Gerente de Proyecto delegando la creación de base de datos a un Desarrollador o el diseño a un Diseñador).
