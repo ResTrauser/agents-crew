@@ -48,11 +48,16 @@ namespace AgentsCrew.Core.Memory
             var point = new PointStruct
             {
                 Id = new PointId { Uuid = id },
-                Vector = record.Embedding.ToArray(),
-                Payload = record.Metadata?.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.ToString() ?? string.Empty) ?? new Dictionary<string, string>()
+                Vectors = record.Embedding.ToArray()
             };
+
+            if (record.Metadata != null)
+            {
+                foreach (var kvp in record.Metadata)
+                {
+                    point.Payload[kvp.Key] = kvp.Value?.ToString() ?? string.Empty;
+                }
+            }
 
             // Add content to payload if available
             if (!string.IsNullOrWhiteSpace(record.Content))
@@ -82,12 +87,12 @@ namespace AgentsCrew.Core.Memory
             var searchResult = await _client.SearchAsync(
                 collectionName: collection,
                 vector: embedding.ToArray(),
-                limit: topK,
-                withPayload: true,
+                limit: (ulong)topK,
+                payloadSelector: true,
                 cancellationToken: cancellationToken);
 
             var results = new List<IVectorRecord>();
-            foreach (var scoredPoint in searchResult.Result)
+            foreach (var scoredPoint in searchResult)
             {
                 var metadata = scoredPoint.Payload
                     .Where(kvp => kvp.Key != "content")
@@ -95,7 +100,7 @@ namespace AgentsCrew.Core.Memory
 
                 var record = new VectorRecord(
                     id: scoredPoint.Id.Uuid,
-                    embedding: new ReadOnlyMemory<float>(scoredPoint.Vector),
+                    embedding: new ReadOnlyMemory<float>(Array.Empty<float>()),
                     content: scoredPoint.Payload.TryGetValue("content", out var content) ? content.ToString() : null,
                     metadata: metadata.Count > 0 ? metadata : null);
 
@@ -111,8 +116,8 @@ namespace AgentsCrew.Core.Memory
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("ID is required", nameof(id));
 
             await _client.DeleteAsync(
-                collectionName: collection,
-                pointsSelector: new PointsSelector { Points = new[] { new PointId { Uuid = id } } },
+                collection,
+                new[] { new PointId { Uuid = id } },
                 cancellationToken: cancellationToken);
         }
 
@@ -122,8 +127,8 @@ namespace AgentsCrew.Core.Memory
 
             try
             {
-                var collections = await _client.GetCollectionsAsync(cancellationToken: cancellationToken);
-                return collections.Result.Collections.Any(c => c.Name == collection);
+                var collections = await _client.ListCollectionsAsync(cancellationToken: cancellationToken);
+                return collections.Any(c => c == collection);
             }
             catch
             {
@@ -140,7 +145,7 @@ namespace AgentsCrew.Core.Memory
             {
                 await _client.CreateCollectionAsync(
                     collectionName: collection,
-                    vectorsConfig: new VectorParams { Size = dimensions, Distance = Distance.Cosine },
+                    vectorsConfig: new VectorParams { Size = (ulong)dimensions, Distance = Distance.Cosine },
                     cancellationToken: cancellationToken);
             }
         }
