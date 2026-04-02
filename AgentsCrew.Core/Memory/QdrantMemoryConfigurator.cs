@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 
 namespace AgentsCrew.Core.Memory
@@ -28,7 +30,7 @@ namespace AgentsCrew.Core.Memory
         {
             private readonly Dictionary<string, List<MemoryRecord>> _storage = new();
 
-            public Task<MemoryQueryResult> GetAsync(string collection, string key, bool withEmbedding = false, CancellationToken cancellationToken = default)
+            public Task<MemoryQueryResult> GetAsync(string collection, string key, bool withEmbedding = false, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 if (_storage.TryGetValue(collection, out var records))
                 {
@@ -38,10 +40,10 @@ namespace AgentsCrew.Core.Memory
                         return Task.FromResult(new MemoryQueryResult(true, record, 1.0));
                     }
                 }
-                return Task.FromResult(new MemoryQueryResult(false, null, 0.0));
+                return Task.FromResult<MemoryQueryResult?>(null);
             }
 
-            public Task<MemoryQueryResult> GetNearestMatchAsync(string collection, ReadOnlyMemory<float> embedding, int limit = 1, double minRelevanceScore = 0.0, bool withEmbedding = false, CancellationToken cancellationToken = default)
+            public Task<MemoryQueryResult> GetNearestMatchAsync(string collection, ReadOnlyMemory<float> embedding, int limit = 1, double minRelevanceScore = 0.0, bool withEmbedding = false, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 // Simple implementation - just return first record if any
                 if (_storage.TryGetValue(collection, out var records) && records.Count > 0)
@@ -49,26 +51,42 @@ namespace AgentsCrew.Core.Memory
                     var record = records[0];
                     return Task.FromResult(new MemoryQueryResult(true, record, 0.8)); // fake score
                 }
-                return Task.FromResult(new MemoryQueryResult(false, null, 0.0));
+                return Task.FromResult<MemoryQueryResult?>(null);
             }
 
-            public Task<MemoryQueryResult> GetNextAsync(string collection, string key, CancellationToken cancellationToken = default)
+            public IAsyncEnumerable<MemoryQueryResult> GetNearestMatchesAsync(string collection, ReadOnlyMemory<float> embedding, int limit = 1, double minRelevanceScore = 0.0, bool withEmbedding = false, [EnumeratorCancellation] Kernel? kernel = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+            {
+                // Simple implementation
+                async IAsyncEnumerable<MemoryQueryResult> AsyncIterator()
+                {
+                    if (_storage.TryGetValue(collection, out var records))
+                    {
+                        foreach (var record in records.Take(limit))
+                        {
+                            yield return new MemoryQueryResult(true, record, 0.8); // fake score
+                        }
+                    }
+                }
+                return AsyncIterator();
+            }
+
+            public Task<MemoryQueryResult> GetNextAsync(string collection, string key, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 throw new NotImplementedException();
             }
 
-            public Task<MemoryRecord> PopulateMetadata(string collection, MemoryRecord record, CancellationToken cancellationToken = default)
+            public Task<MemoryRecord> PopulateMetadata(string collection, MemoryRecord record, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 // Simple implementation that just returns the record
                 return Task.FromResult(record);
             }
 
-            public Task<MemoryRecord> PopulateMetadata(string collection, MemoryRecord record, bool withEmbedding, CancellationToken cancellationToken = default)
+            public Task<MemoryRecord> PopulateMetadata(string collection, MemoryRecord record, bool withEmbedding, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 throw new NotImplementedException();
             }
 
-            public async Task RemoveAsync(string collection, string key, CancellationToken cancellationToken = default)
+            public async Task RemoveAsync(string collection, string key, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 if (_storage.TryGetValue(collection, out var records))
                 {
@@ -81,7 +99,7 @@ namespace AgentsCrew.Core.Memory
                 await Task.CompletedTask;
             }
 
-            public Task RemoveAllAsync(string collection, CancellationToken cancellationToken = default)
+            public Task RemoveAllAsync(string collection, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 if (_storage.ContainsKey(collection))
                 {
@@ -90,7 +108,7 @@ namespace AgentsCrew.Core.Memory
                 return Task.CompletedTask;
             }
 
-            public Task SaveInformationAsync(string collection, string text, string? id = null, string? description = null, string? additionalMetadata = null, CancellationToken cancellationToken = default)
+            public Task<string> SaveInformationAsync(string collection, string text, string? id = null, string? description = null, string? additionalMetadata = null, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 var recordId = id ?? Guid.NewGuid().ToString();
                 var metadata = new Dictionary<string, object>();
@@ -128,44 +146,44 @@ namespace AgentsCrew.Core.Memory
                     _storage[collection].Add(record);
                 }
 
-                return Task.CompletedTask;
+                return Task.FromResult(recordId);
             }
 
-            public Task SaveReferenceAsync(string collection, string text, string? id = null, string? description = null, string? additionalMetadata = null, string? externalSourceName = null, string? externalSourceId = null, CancellationToken cancellationToken = default)
+            public Task SaveReferenceAsync(string collection, string text, string? id = null, string? description = null, string? additionalMetadata = null, string? externalSourceName = null, string? externalSourceId = null, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 throw new NotImplementedException();
             }
 
-            public Task<MemoryQueryResult> SearchAsync(string collection, string query, int limit = 1, double minRelevanceScore = 0.0, bool withEmbedding = false, CancellationToken cancellationToken = default)
+            public IAsyncEnumerable<MemoryQueryResult> SearchAsync(string collection, string query, int limit = 1, double minRelevanceScore = 0.0, bool withEmbedding = false, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 // Simple implementation: return all records that contain query in text (case-insensitive)
-                if (_storage.TryGetValue(collection, out var records))
+                async IAsyncEnumerable<MemoryQueryResult> AsyncIterator()
                 {
-                    var matches = new List<MemoryQueryResult>();
-                    foreach (var record in records)
+                    if (_storage.TryGetValue(collection, out var records))
                     {
-                        if (record.Text.Contains(query, StringComparison.OrdinalIgnoreCase))
+                        foreach (var record in records)
                         {
-                            matches.Add(new MemoryQueryResult(true, record, 0.5)); // fake score
+                            if (record.Text.Contains(query, StringComparison.OrdinalIgnoreCase))
+                            {
+                                yield return new MemoryQueryResult(true, record, 0.5); // fake score
+                            }
                         }
                     }
-                    // Return up to limit matches
-                    return Task.FromResult(matches.Count > 0 ? matches[0] : new MemoryQueryResult(false, null, 0.0));
                 }
-                return Task.FromResult(new MemoryQueryResult(false, null, 0.0));
+                return AsyncIterator();
             }
 
-            public Task<IReadOnlyCollection<string>> GetCollectionsAsync(CancellationToken cancellationToken = default)
+            public Task<IList<string>> GetCollectionsAsync(Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
-                return Task.FromResult<IReadOnlyCollection<string>>(_storage.Keys);
+                return Task.FromResult<IList<string>>(_storage.Keys.ToList());
             }
 
-            public Task<MemoryQueryResult> GetBatchAsync(string collection, IEnumerable<string> keys, bool withEmbedding = false, CancellationToken cancellationToken = default)
+            public Task<MemoryQueryResult> GetBatchAsync(string collection, IEnumerable<string> keys, bool withEmbedding = false, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 throw new NotImplementedException();
             }
 
-            public Task<long> CountAsync(string collection, CancellationToken cancellationToken = default)
+            public Task<long> CountAsync(string collection, Kernel? kernel = null, CancellationToken cancellationToken = default)
             {
                 if (_storage.TryGetValue(collection, out var records))
                 {
