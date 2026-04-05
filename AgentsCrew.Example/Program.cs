@@ -38,7 +38,8 @@ namespace AgentsCrew.Example
             var memoryContext = new MemoryContext(
                 new ShortTermMemory(),
                 new LongTermMemory(semanticMemory),
-                new EntityMemory()
+                new EntityMemory(),
+                new InMemorySessionMemory(Guid.NewGuid().ToString())
             );
 #pragma warning restore SKEXP0001
 
@@ -108,8 +109,8 @@ namespace AgentsCrew.Example
 
     public class AppResult
     {
-        public string Status { get; set; }
-        public string Message { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
     }
 
     public class DelegationMockChatCompletionService : IChatCompletionService
