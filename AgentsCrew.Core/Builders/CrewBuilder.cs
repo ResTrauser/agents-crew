@@ -55,7 +55,8 @@ namespace AgentsCrew.Core.Builders
                 memory = new MemoryContext(
                     new ShortTermMemory(),
                     new LongTermMemory(semanticMemory),
-                    new EntityMemory()
+                    new EntityMemory(),
+                    new InMemorySessionMemory(System.Guid.NewGuid().ToString())
                 );
 #pragma warning restore SKEXP0001
             }

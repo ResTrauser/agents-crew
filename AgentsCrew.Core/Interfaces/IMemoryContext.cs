@@ -5,5 +5,6 @@ namespace AgentsCrew.Core.Interfaces
         IShortTermMemory ShortTerm { get; }
         ILongTermMemory LongTerm { get; }
         IEntityMemory Entity { get; }
+        ISessionMemory Session { get; }
     }
 }
