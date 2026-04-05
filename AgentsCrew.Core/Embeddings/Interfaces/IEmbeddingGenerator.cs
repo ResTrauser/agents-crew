@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AgentsCrew.Core.Memory.VectorStores
+namespace AgentsCrew.Core.Embeddings.Interfaces
 {
     public interface IEmbeddingGenerator
     {

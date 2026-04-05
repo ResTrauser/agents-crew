@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
 using AgentsCrew.Core.Telemetry;
 using Microsoft.Extensions.Logging;
+using AgentsCrew.Core.Knowledge;
 
 namespace AgentsCrew.Core.Interfaces
 {

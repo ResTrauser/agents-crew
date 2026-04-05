@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AgentsCrew.Core.Embeddings.Interfaces;
 using AgentsCrew.Core.Memory.VectorStores;
 using AgentsCrew.Core.Memory.VectorStores.Implementations;
 using Microsoft.SemanticKernel.Memory;

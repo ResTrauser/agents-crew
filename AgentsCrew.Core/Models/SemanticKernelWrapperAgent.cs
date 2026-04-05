@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AgentsCrew.Core.Interfaces;
+using AgentsCrew.Core.Knowledge;
 using Microsoft.SemanticKernel;
 
 namespace AgentsCrew.Core.Models

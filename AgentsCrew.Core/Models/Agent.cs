@@ -9,6 +9,7 @@ using AgentsCrew.Core.Telemetry;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using AgentsCrew.Core.Configuration;
+using AgentsCrew.Core.Knowledge;
 
 namespace AgentsCrew.Core.Models
 {
