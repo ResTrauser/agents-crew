@@ -1,0 +1,15 @@
+agents:
+  - role: Researcher
+    goal: Conduct research on CrewAI
+    backstory: An expert researcher in AI frameworks.
+  - role: Writer
+    goal: Write an article about CrewAI
+    backstory: A skilled tech writer.
+
+tasks:
+  - description: Research the core concepts of CrewAI.
+    expected_output: A summary of CrewAI concepts.
+    assigned_agent: Researcher
+  - description: Write a blog post based on the research.
+    expected_output: A 500-word blog post.
+    assigned_agent: Writer
